@@ -1,103 +1,332 @@
+"use client";
 import Image from "next/image";
+import { useState } from "react";
+import {
+	fetchLunoPrice,
+	fetchBinancePrice,
+	fetchHuobiPrice,
+	MarketDetail,
+} from "../lib/api";
+
+interface ExchangeRateDetails {
+	rate: number;
+	source: {
+		platform: string;
+		price: number;
+		timestamp: number;
+		bid?: number;
+		ask?: number;
+		volume?: number;
+	};
+	target: {
+		platform: string;
+		price: number;
+		timestamp: number;
+		bid?: number;
+		ask?: number;
+		volume?: number;
+	};
+}
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+	const [sourcePlatform, setSourcePlatform] = useState("luno");
+	const [targetPlatform, setTargetPlatform] = useState("binance");
+	const [cryptoAsset, setCryptoAsset] = useState("xrp");
+	const [exchangeRateDetails, setExchangeRateDetails] =
+		useState<ExchangeRateDetails | null>(null);
+	const [error, setError] = useState<string | null>(null);
+	const [loading, setLoading] = useState(false);
+	const [showDetails, setShowDetails] = useState(false);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
-  );
+	const calculateExchangeRate = async () => {
+		setLoading(true);
+		setError(null);
+		setExchangeRateDetails(null);
+		setShowDetails(false);
+
+		try {
+			let lunoData: MarketDetail;
+			let targetData: MarketDetail;
+
+			// Fetch price from source platform (Luno - MYR)
+			if (sourcePlatform === "luno") {
+				const lunoPair = `${cryptoAsset.toUpperCase()}MYR`;
+				lunoData = await fetchLunoPrice(lunoPair);
+			} else {
+				throw new Error("Unsupported source platform.");
+			}
+
+			// Fetch price from target platform (Binance/Huobi - USDT)
+			if (targetPlatform === "binance") {
+				const binanceSymbol = `${cryptoAsset.toUpperCase()}USDT`;
+				targetData = await fetchBinancePrice(binanceSymbol);
+			} else if (targetPlatform === "huobi") {
+				const huobiSymbol = `${cryptoAsset.toLowerCase()}usdt`; // Huobi uses lowercase symbols
+				targetData = await fetchHuobiPrice(huobiSymbol);
+			} else {
+				throw new Error("Unsupported target platform.");
+			}
+
+			if (lunoData.price && targetData.price) {
+				const rate = lunoData.price / targetData.price;
+				setExchangeRateDetails({
+					rate,
+					source: {
+						platform: "Luno",
+						price: lunoData.price,
+						timestamp: lunoData.timestamp,
+						bid: lunoData.bid,
+						ask: lunoData.ask,
+						volume: lunoData.volume,
+					},
+					target: {
+						platform:
+							targetPlatform.charAt(0).toUpperCase() +
+							targetPlatform.slice(1),
+						price: targetData.price,
+						timestamp: targetData.timestamp,
+						bid: targetData.bid,
+						ask: targetData.ask,
+						volume: targetData.volume,
+					},
+				});
+			} else {
+				throw new Error("Could not fetch prices for both platforms.");
+			}
+		} catch (err: unknown) {
+			setError(
+				err instanceof Error
+					? err.message
+					: "An unknown error occurred."
+			);
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	return (
+		<div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
+			<main className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
+				<h1 className="text-3xl font-bold text-center text-gray-800 mb-6">
+					MYR2USDT
+				</h1>
+
+				<div className="mb-4">
+					<label
+						htmlFor="source-platform"
+						className="block text-gray-700 text-sm font-semibold mb-2"
+					>
+						Source Platform (MYR):
+					</label>
+					<div className="relative">
+						<select
+							id="source-platform"
+							className="block appearance-none w-full bg-gray-100 border border-gray-300 text-gray-700 py-3 px-4 pr-8 rounded-lg leading-tight focus:outline-none focus:bg-white focus:border-blue-500 transition duration-200 ease-in-out"
+							value={sourcePlatform}
+							onChange={(e) => setSourcePlatform(e.target.value)}
+						>
+							<option value="luno">Luno</option>
+						</select>
+						<div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+							<svg
+								className="fill-current h-4 w-4"
+								xmlns="http://www.w3.org/2000/svg"
+								viewBox="0 0 20 20"
+							>
+								<path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+							</svg>
+						</div>
+					</div>
+				</div>
+
+				<div className="mb-4">
+					<label
+						htmlFor="target-platform"
+						className="block text-gray-700 text-sm font-semibold mb-2"
+					>
+						Target Platform (USDT):
+					</label>
+					<div className="relative">
+						<select
+							id="target-platform"
+							className="block appearance-none w-full bg-gray-100 border border-gray-300 text-gray-700 py-3 px-4 pr-8 rounded-lg leading-tight focus:outline-none focus:bg-white focus:border-blue-500 transition duration-200 ease-in-out"
+							value={targetPlatform}
+							onChange={(e) => setTargetPlatform(e.target.value)}
+						>
+							<option value="binance">Binance</option>
+							<option value="huobi">Huobi</option>
+						</select>
+						<div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+							<svg
+								className="fill-current h-4 w-4"
+								xmlns="http://www.w3.org/2000/svg"
+								viewBox="0 0 20 20"
+							>
+								<path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+							</svg>
+						</div>
+					</div>
+				</div>
+
+				<div className="mb-6">
+					<label
+						htmlFor="crypto-asset"
+						className="block text-gray-700 text-sm font-semibold mb-2"
+					>
+						Crypto Asset:
+					</label>
+					<div className="relative">
+						<select
+							id="crypto-asset"
+							className="block appearance-none w-full bg-gray-100 border border-gray-300 text-gray-700 py-3 px-4 pr-8 rounded-lg leading-tight focus:outline-none focus:bg-white focus:border-blue-500 transition duration-200 ease-in-out"
+							value={cryptoAsset}
+							onChange={(e) => setCryptoAsset(e.target.value)}
+						>
+							<option value="xrp">XRP</option>
+							<option value="btc">BTC</option>
+							<option value="eth">ETH</option>
+						</select>
+						<div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+							<svg
+								className="fill-current h-4 w-4"
+								xmlns="http://www.w3.org/2000/svg"
+								viewBox="0 0 20 20"
+							>
+								<path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+							</svg>
+						</div>
+					</div>
+				</div>
+
+				<button
+					onClick={calculateExchangeRate}
+					className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg focus:outline-none focus:shadow-outline transition duration-200 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed"
+					disabled={loading}
+				>
+					{loading ? "Calculating..." : "Fetch & Calculate Rate"}
+				</button>
+
+				{error && (
+					<div className="text-red-500 text-center mt-4">{error}</div>
+				)}
+
+				{exchangeRateDetails && (
+					<div
+						id="exchange-rate"
+						className="mt-6 p-4 bg-blue-50 rounded-lg text-center text-xl font-bold text-blue-800 border border-blue-200"
+					>
+						Effective Exchange Rate (MYR → USDT):{" "}
+						{exchangeRateDetails.rate.toFixed(4)}
+						<div>
+							<button
+								onClick={() => setShowDetails(!showDetails)}
+								className="ml-2 text-blue-600 hover:text-blue-800 text-sm focus:outline-none"
+							>
+								{showDetails ? "Hide Details" : "Show Details"}
+							</button>
+						</div>
+						{showDetails && (
+							<div className="text-sm text-gray-700 mt-4 text-left">
+								<h3 className="font-bold text-md mb-2 text-blue-700">
+									Exchange Details:
+								</h3>
+								<div className="mb-2">
+									<p>
+										<span className="font-semibold">
+											Source Platform (
+											{
+												exchangeRateDetails.source
+													.platform
+											}
+											):
+										</span>{" "}
+										{exchangeRateDetails.source.price.toFixed(
+											4
+										)}{" "}
+										MYR
+									</p>
+									{exchangeRateDetails.source.bid && (
+										<p className="ml-4">
+											Bid:{" "}
+											{exchangeRateDetails.source.bid.toFixed(
+												4
+											)}{" "}
+											MYR
+										</p>
+									)}
+									{exchangeRateDetails.source.ask && (
+										<p className="ml-4">
+											Ask:{" "}
+											{exchangeRateDetails.source.ask.toFixed(
+												4
+											)}{" "}
+											MYR
+										</p>
+									)}
+									{exchangeRateDetails.source.volume && (
+										<p className="ml-4">
+											Volume:{" "}
+											{exchangeRateDetails.source.volume}
+										</p>
+									)}
+									<p className="ml-4">
+										Datetime:{" "}
+										{new Date(
+											exchangeRateDetails.source.timestamp
+										).toLocaleString()}
+									</p>
+								</div>
+								<div>
+									<p>
+										<span className="font-semibold">
+											Target Platform (
+											{
+												exchangeRateDetails.target
+													.platform
+											}
+											):
+										</span>{" "}
+										{exchangeRateDetails.target.price.toFixed(
+											4
+										)}{" "}
+										USDT
+									</p>
+									{exchangeRateDetails.target.bid && (
+										<p className="ml-4">
+											Bid:{" "}
+											{exchangeRateDetails.target.bid.toFixed(
+												4
+											)}{" "}
+											USDT
+										</p>
+									)}
+									{exchangeRateDetails.target.ask && (
+										<p className="ml-4">
+											Ask:{" "}
+											{exchangeRateDetails.target.ask.toFixed(
+												4
+											)}{" "}
+											USDT
+										</p>
+									)}
+									{exchangeRateDetails.target.volume && (
+										<p className="ml-4">
+											Volume:{" "}
+											{exchangeRateDetails.target.volume}
+										</p>
+									)}
+									<p className="ml-4">
+										Datetime:{" "}
+										{new Date(
+											exchangeRateDetails.target.timestamp
+										).toLocaleString()}
+									</p>
+								</div>
+							</div>
+						)}
+					</div>
+				)}
+			</main>
+		</div>
+	);
 }
