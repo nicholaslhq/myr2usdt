@@ -1,6 +1,6 @@
 "use client";
-import Image from "next/image";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { ArrowRight, CircleDollarSign, Info, RefreshCw } from "lucide-react";
 import {
 	fetchLunoPrice,
 	fetchBinancePrice,
@@ -10,6 +10,40 @@ import {
 	MarketDetail,
 } from "../lib/api";
 import { BnmExchangeRate } from "../app/api/bnm/usdmyr/route";
+import {
+	Select,
+	SelectContent,
+	SelectGroup,
+	SelectItem,
+	SelectLabel,
+	SelectTrigger,
+	SelectValue,
+} from "../components/ui/select";
+import { Button } from "../components/ui/button";
+import {
+	Card,
+	CardContent,
+	CardFooter,
+	CardHeader,
+	CardTitle,
+} from "../components/ui/card";
+import {
+	Dialog,
+	DialogTrigger,
+	DialogContent,
+	DialogHeader,
+	DialogTitle,
+	DialogDescription,
+	DialogFooter,
+	DialogClose,
+} from "../components/ui/dialog";
+import { Badge } from "../components/ui/badge";
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipTrigger,
+} from "../components/ui/tooltip";
+import { Skeleton } from "../components/ui/skeleton";
 
 interface ExchangeRateDetails {
 	rate: number;
@@ -39,40 +73,13 @@ export default function Home() {
 		useState<ExchangeRateDetails | null>(null);
 	const [error, setError] = useState<string | null>(null);
 	const [loading, setLoading] = useState(false);
-	const [showDetails, setShowDetails] = useState(false);
 	const [usdtMyrPrice, setUsdtMyrPrice] = useState<number | null>(null);
 	const [usdMyrRate, setUsdMyrRate] = useState<BnmExchangeRate | null>(null);
 
-	useEffect(() => {
-		const getUsdtMyrPrice = async () => {
-			try {
-				const price = await fetchCoinGeckoPrice();
-				setUsdtMyrPrice(price);
-			} catch (err) {
-				console.error("Error fetching CoinGecko USDT/MYR price:", err);
-			}
-		};
-		getUsdtMyrPrice();
-
-		const getBnmUsdMyrPrice = async () => {
-			try {
-				const rate = await fetchBnmPrice();
-				setUsdMyrRate(rate);
-			} catch (err) {
-				console.error("Error fetching BNM USD/MYR price:", err);
-			}
-		};
-		getBnmUsdMyrPrice();
-
-		// Auto-fetch and calculate rate on page load for the default pair
-		calculateExchangeRate();
-	}, []); // Run once on component mount
-
-	const calculateExchangeRate = async () => {
+	const calculateExchangeRate = useCallback(async () => {
 		setLoading(true);
 		setError(null);
 		setExchangeRateDetails(null);
-		setShowDetails(false);
 
 		try {
 			let lunoData: MarketDetail;
@@ -132,244 +139,359 @@ export default function Home() {
 		} finally {
 			setLoading(false);
 		}
-	};
+	}, [sourcePlatform, targetPlatform, cryptoAsset]);
+
+	useEffect(() => {
+		const getUsdtMyrPrice = async () => {
+			try {
+				const price = await fetchCoinGeckoPrice();
+				setUsdtMyrPrice(price);
+			} catch (err) {
+				console.error("Error fetching CoinGecko USDT/MYR price:", err);
+			}
+		};
+		getUsdtMyrPrice();
+
+		const getBnmUsdMyrPrice = async () => {
+			try {
+				const rate = await fetchBnmPrice();
+				setUsdMyrRate(rate);
+			} catch (err) {
+				console.error("Error fetching BNM USD/MYR price:", err);
+			}
+		};
+		getBnmUsdMyrPrice();
+
+		// Auto-fetch and calculate rate on page load for the default pair
+		calculateExchangeRate();
+	}, [sourcePlatform, targetPlatform, cryptoAsset, calculateExchangeRate]); // Re-run when dropdowns change
 
 	return (
 		<div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
-			<main className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
-				<h1 className="text-3xl font-bold text-center text-gray-800 mb-6">
-					MYR2USDT
-				</h1>
+			<Card className="w-full max-w-md">
+				<CardHeader>
+					<CardTitle className="text-xs font-bold text-center text-gray-800 mb-6">
+						MYR2USDT
+					</CardTitle>
+				</CardHeader>
 
-				<div className="mb-4">
-					<label
-						htmlFor="source-platform"
-						className="block text-gray-700 text-sm font-semibold mb-2"
-					>
-						Source Platform (MYR):
-					</label>
-					<div className="relative">
-						<select
-							id="source-platform"
-							className="block appearance-none w-full bg-gray-100 border border-gray-300 text-gray-700 py-3 px-4 pr-8 rounded-lg leading-tight focus:outline-none focus:bg-white focus:border-blue-500 transition duration-200 ease-in-out"
-							value={sourcePlatform}
-							onChange={(e) => setSourcePlatform(e.target.value)}
+				{exchangeRateDetails ? (
+					<CardContent>
+						<div
+							id="exchange-rate"
+							className="text-center text-8xl font-semibold"
 						>
-							<option value="luno">Luno</option>
-						</select>
-						<div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-							<svg
-								className="fill-current h-4 w-4"
-								xmlns="http://www.w3.org/2000/svg"
-								viewBox="0 0 20 20"
-							>
-								<path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
-							</svg>
+							{exchangeRateDetails.rate.toFixed(4)}
 						</div>
-					</div>
-				</div>
-
-				<div className="mb-4">
-					<label
-						htmlFor="target-platform"
-						className="block text-gray-700 text-sm font-semibold mb-2"
-					>
-						Target Platform (USDT):
-					</label>
-					<div className="relative">
-						<select
-							id="target-platform"
-							className="block appearance-none w-full bg-gray-100 border border-gray-300 text-gray-700 py-3 px-4 pr-8 rounded-lg leading-tight focus:outline-none focus:bg-white focus:border-blue-500 transition duration-200 ease-in-out"
-							value={targetPlatform}
-							onChange={(e) => setTargetPlatform(e.target.value)}
-						>
-							<option value="binance">Binance</option>
-							<option value="huobi">Huobi</option>
-						</select>
-						<div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-							<svg
-								className="fill-current h-4 w-4"
-								xmlns="http://www.w3.org/2000/svg"
-								viewBox="0 0 20 20"
-							>
-								<path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
-							</svg>
-						</div>
-					</div>
-				</div>
-
-				<div className="mb-6">
-					<label
-						htmlFor="crypto-asset"
-						className="block text-gray-700 text-sm font-semibold mb-2"
-					>
-						Crypto Asset:
-					</label>
-					<div className="relative">
-						<select
-							id="crypto-asset"
-							className="block appearance-none w-full bg-gray-100 border border-gray-300 text-gray-700 py-3 px-4 pr-8 rounded-lg leading-tight focus:outline-none focus:bg-white focus:border-blue-500 transition duration-200 ease-in-out"
-							value={cryptoAsset}
-							onChange={(e) => setCryptoAsset(e.target.value)}
-						>
-							<option value="xrp">XRP</option>
-							<option value="btc">BTC</option>
-							<option value="eth">ETH</option>
-						</select>
-						<div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-							<svg
-								className="fill-current h-4 w-4"
-								xmlns="http://www.w3.org/2000/svg"
-								viewBox="0 0 20 20"
-							>
-								<path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
-							</svg>
-						</div>
-					</div>
-				</div>
-
-				<button
-					onClick={calculateExchangeRate}
-					className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg focus:outline-none focus:shadow-outline transition duration-200 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed"
-					disabled={loading}
-				>
-					{loading ? "Calculating..." : "Fetch & Calculate Rate"}
-				</button>
+					</CardContent>
+				) : (
+					<CardContent>
+						<Skeleton className="h-24 w-full" />
+					</CardContent>
+				)}
 
 				{error && (
-					<div className="text-red-500 text-center mt-4">{error}</div>
+					<CardContent className="text-red-500 text-center mt-4">
+						{error}
+					</CardContent>
 				)}
 
-				{usdtMyrPrice && (
-					<div className="mt-4 p-3 bg-green-50 rounded-lg text-center text-md font-semibold text-green-800 border border-green-200">
-						CoinGecko USDT/MYR: {usdtMyrPrice.toFixed(4)} MYR
-					</div>
-				)}
+				<CardContent className="mt-4 flex justify-center space-x-2">
+					{usdtMyrPrice ? (
+						<Tooltip>
+							<TooltipTrigger asChild>
+								<Badge variant="secondary" className="text-sm">
+									CG: {usdtMyrPrice.toFixed(4)}
+								</Badge>
+							</TooltipTrigger>
+							<TooltipContent>
+								<p>CoinGecko USDT/MYR price</p>
+							</TooltipContent>
+						</Tooltip>
+					) : (
+						<Skeleton className="h-7 w-24" />
+					)}
+					{usdMyrRate?.rate.middle_rate ? (
+						<Tooltip>
+							<TooltipTrigger asChild>
+								<Badge variant="secondary" className="text-sm">
+									BNM:{" "}
+									{usdMyrRate.rate.middle_rate.toFixed(4)}
+								</Badge>
+							</TooltipTrigger>
+							<TooltipContent>
+								<p>Bank Negara Malaysia USD/MYR middle rate</p>
+							</TooltipContent>
+						</Tooltip>
+					) : (
+						<Skeleton className="h-7 w-24" />
+					)}
+				</CardContent>
 
-				{usdMyrRate && usdMyrRate.rate.middle_rate && (
-					<div className="mt-4 p-3 bg-purple-50 rounded-lg text-center text-md font-semibold text-purple-800 border border-purple-200">
-						BNM USD/MYR: {usdMyrRate.rate.middle_rate.toFixed(4)}{" "}
-						MYR
-					</div>
-				)}
-
-				{exchangeRateDetails && (
-					<div
-						id="exchange-rate"
-						className="mt-6 p-4 bg-blue-50 rounded-lg text-center text-xl font-bold text-blue-800 border border-blue-200"
+				<CardContent className="flex items-center justify-center space-x-2">
+					<Select
+						value={sourcePlatform}
+						onValueChange={(value) => {
+							setSourcePlatform(value);
+							calculateExchangeRate();
+						}}
 					>
-						Effective Exchange Rate (MYR → USDT):{" "}
-						{exchangeRateDetails.rate.toFixed(4)}
-						<div>
-							<button
-								onClick={() => setShowDetails(!showDetails)}
-								className="ml-2 text-blue-600 hover:text-blue-800 text-sm focus:outline-none"
+						<SelectTrigger
+							id="source-platform"
+							className="w-[120px]"
+						>
+							<SelectValue placeholder="Source" />
+						</SelectTrigger>
+						<SelectContent>
+							<SelectGroup>
+								<SelectLabel>Source</SelectLabel>
+								<SelectItem value="luno">Luno</SelectItem>
+							</SelectGroup>
+						</SelectContent>
+					</Select>
+
+					<ArrowRight className="h-5 w-5 text-gray-700" />
+
+					<Select
+						value={targetPlatform}
+						onValueChange={(value) => {
+							setTargetPlatform(value);
+							calculateExchangeRate();
+						}}
+					>
+						<SelectTrigger
+							id="target-platform"
+							className="w-[120px]"
+						>
+							<SelectValue placeholder="Target" />
+						</SelectTrigger>
+						<SelectContent>
+							<SelectGroup>
+								<SelectLabel>Target</SelectLabel>
+								<SelectItem value="binance">Binance</SelectItem>
+								<SelectItem value="huobi">Huobi</SelectItem>
+							</SelectGroup>
+						</SelectContent>
+					</Select>
+
+					<CircleDollarSign className="h-5 w-5 text-gray-700" />
+
+					<Select
+						value={cryptoAsset}
+						onValueChange={(value) => {
+							setCryptoAsset(value);
+							calculateExchangeRate();
+						}}
+					>
+						<SelectTrigger id="crypto-asset" className="w-[100px]">
+							<SelectValue placeholder="Asset" />
+						</SelectTrigger>
+						<SelectContent>
+							<SelectGroup>
+								<SelectLabel>Crypto</SelectLabel>
+								<SelectItem value="xrp">XRP</SelectItem>
+								<SelectItem value="btc">BTC</SelectItem>
+								<SelectItem value="eth">ETH</SelectItem>
+							</SelectGroup>
+						</SelectContent>
+					</Select>
+				</CardContent>
+
+				<CardFooter className="flex justify-center items-center gap-2">
+					<Dialog>
+						<DialogTrigger asChild>
+							<Button
+								variant="outline"
+								className="text-sm w-1/2"
+								size="icon"
+								disabled={!exchangeRateDetails}
 							>
-								{showDetails ? "Hide Details" : "Show Details"}
-							</button>
-						</div>
-						{showDetails && (
-							<div className="text-sm text-gray-700 mt-4 text-left">
-								<h3 className="font-bold text-md mb-2 text-blue-700">
-									Exchange Details:
-								</h3>
-								<div className="mb-2">
-									<p>
-										<span className="font-semibold">
-											Source Platform (
-											{
-												exchangeRateDetails.source
-													.platform
-											}
-											):
-										</span>{" "}
-										{exchangeRateDetails.source.price.toFixed(
-											4
-										)}{" "}
-										MYR
-									</p>
-									{exchangeRateDetails.source.bid && (
-										<p className="ml-4">
-											Bid:{" "}
-											{exchangeRateDetails.source.bid.toFixed(
-												4
-											)}{" "}
-											MYR
-										</p>
-									)}
-									{exchangeRateDetails.source.ask && (
-										<p className="ml-4">
-											Ask:{" "}
-											{exchangeRateDetails.source.ask.toFixed(
-												4
-											)}{" "}
-											MYR
-										</p>
-									)}
-									{exchangeRateDetails.source.volume && (
-										<p className="ml-4">
-											Volume:{" "}
-											{exchangeRateDetails.source.volume}
-										</p>
-									)}
-									<p className="ml-4">
-										Datetime:{" "}
-										{new Date(
-											exchangeRateDetails.source.timestamp
-										).toLocaleString()}
-									</p>
+								<Info className="h-4 w-4" />
+							</Button>
+						</DialogTrigger>
+						<DialogContent className="sm:max-w-[425px]">
+							<DialogHeader>
+								<DialogTitle>Exchange Details</DialogTitle>
+								<DialogDescription>
+									Detailed information about the exchange
+									rate.
+								</DialogDescription>
+							</DialogHeader>
+							{exchangeRateDetails && (
+								<div className="grid gap-4 py-4">
+									<div className="grid grid-cols-2 gap-4">
+										<div className="col-span-2 text-lg font-semibold flex items-center gap-2">
+											Source
+											<Badge variant="secondary">
+												{
+													exchangeRateDetails.source
+														.platform
+												}
+											</Badge>
+											<Badge variant="secondary">
+												{cryptoAsset.toUpperCase()}
+											</Badge>
+										</div>
+										<div className="col-span-1">
+											<p className="text-sm font-medium">
+												Price:
+											</p>
+											<p className="text-sm">
+												{exchangeRateDetails.source.price.toFixed(
+													4
+												)}{" "}
+												MYR
+											</p>
+										</div>
+										{exchangeRateDetails.source.volume && (
+											<div className="col-span-1">
+												<p className="text-sm font-medium">
+													Volume:
+												</p>
+												<p className="text-sm">
+													{
+														exchangeRateDetails
+															.source.volume
+													}
+												</p>
+											</div>
+										)}
+										{exchangeRateDetails.source.bid && (
+											<div className="col-span-1">
+												<p className="text-sm font-medium">
+													Bid:
+												</p>
+												<p className="text-sm">
+													{exchangeRateDetails.source.bid.toFixed(
+														4
+													)}{" "}
+													MYR
+												</p>
+											</div>
+										)}
+										{exchangeRateDetails.source.ask && (
+											<div className="col-span-1">
+												<p className="text-sm font-medium">
+													Ask:
+												</p>
+												<p className="text-sm">
+													{exchangeRateDetails.source.ask.toFixed(
+														4
+													)}{" "}
+													MYR
+												</p>
+											</div>
+										)}
+										<div className="col-span-2">
+											<p className="text-sm font-medium">
+												Datetime:
+											</p>
+											<p className="text-sm">
+												{new Date(
+													exchangeRateDetails.source.timestamp
+												).toLocaleString()}
+											</p>
+										</div>
+									</div>
+
+									<div className="grid grid-cols-2 gap-4">
+										<div className="col-span-2 text-lg font-semibold flex items-center gap-2">
+											Target
+											<Badge variant="secondary">
+												{
+													exchangeRateDetails.target
+														.platform
+												}
+											</Badge>
+											<Badge variant="secondary">
+												{cryptoAsset.toUpperCase()}
+											</Badge>
+										</div>
+										<div className="col-span-1">
+											<p className="text-sm font-medium">
+												Price:
+											</p>
+											<p className="text-sm">
+												{exchangeRateDetails.target.price.toFixed(
+													4
+												)}{" "}
+												USDT
+											</p>
+										</div>
+										{exchangeRateDetails.target.volume && (
+											<div className="col-span-1">
+												<p className="text-sm font-medium">
+													Volume:
+												</p>
+												<p className="text-sm">
+													{
+														exchangeRateDetails
+															.target.volume
+													}
+												</p>
+											</div>
+										)}
+										{exchangeRateDetails.target.bid && (
+											<div className="col-span-1">
+												<p className="text-sm font-medium">
+													Bid:
+												</p>
+												<p className="text-sm">
+													{exchangeRateDetails.target.bid.toFixed(
+														4
+													)}{" "}
+													USDT
+												</p>
+											</div>
+										)}
+										{exchangeRateDetails.target.ask && (
+											<div className="col-span-1">
+												<p className="text-sm font-medium">
+													Ask:
+												</p>
+												<p className="text-sm">
+													{exchangeRateDetails.target.ask.toFixed(
+														4
+													)}{" "}
+													USDT
+												</p>
+											</div>
+										)}
+										<div className="col-span-2">
+											<p className="text-sm font-medium">
+												Datetime:
+											</p>
+											<p className="text-sm">
+												{new Date(
+													exchangeRateDetails.target.timestamp
+												).toLocaleString()}
+											</p>
+										</div>
+									</div>
 								</div>
-								<div>
-									<p>
-										<span className="font-semibold">
-											Target Platform (
-											{
-												exchangeRateDetails.target
-													.platform
-											}
-											):
-										</span>{" "}
-										{exchangeRateDetails.target.price.toFixed(
-											4
-										)}{" "}
-										USDT
-									</p>
-									{exchangeRateDetails.target.bid && (
-										<p className="ml-4">
-											Bid:{" "}
-											{exchangeRateDetails.target.bid.toFixed(
-												4
-											)}{" "}
-											USDT
-										</p>
-									)}
-									{exchangeRateDetails.target.ask && (
-										<p className="ml-4">
-											Ask:{" "}
-											{exchangeRateDetails.target.ask.toFixed(
-												4
-											)}{" "}
-											USDT
-										</p>
-									)}
-									{exchangeRateDetails.target.volume && (
-										<p className="ml-4">
-											Volume:{" "}
-											{exchangeRateDetails.target.volume}
-										</p>
-									)}
-									<p className="ml-4">
-										Datetime:{" "}
-										{new Date(
-											exchangeRateDetails.target.timestamp
-										).toLocaleString()}
-									</p>
-								</div>
-							</div>
-						)}
-					</div>
-				)}
-			</main>
+							)}
+							<DialogFooter>
+								<DialogClose asChild>
+									<Button type="button">Close</Button>
+								</DialogClose>
+							</DialogFooter>
+						</DialogContent>
+					</Dialog>
+					<Button
+						onClick={calculateExchangeRate}
+						className="w-1/2"
+						disabled={loading || !exchangeRateDetails}
+					>
+						<RefreshCw
+							className={
+								loading
+									? "h-4 w-4 animate-spin-slow"
+									: "h-4 w-4"
+							}
+						/>
+					</Button>
+				</CardFooter>
+			</Card>
 		</div>
 	);
 }
