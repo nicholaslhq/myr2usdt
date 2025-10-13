@@ -1,6 +1,8 @@
 import { LunoApiResponse } from "@/app/api/luno/[pair]/route";
 import { BinanceApiResponse } from "@/app/api/binance/[symbol]/route";
 import { HuobiApiResponse } from "@/app/api/huobi/[symbol]/route";
+import { CoinGeckoApiResponse } from "@/app/api/coingecko/usdtmyr/route";
+import { BnmExchangeRate } from "@/app/api/bnm/usdmyr/route";
 
 export interface MarketDetail {
 	timestamp: number;
@@ -12,9 +14,10 @@ export interface MarketDetail {
 
 export async function fetcher<T>(
 	url: string,
-	errorMessage: string
+	errorMessage: string,
+	options?: RequestInit
 ): Promise<T> {
-	const response = await fetch(url);
+	const response = await fetch(url, options);
 	if (!response.ok) {
 		const errorData = await response.json().catch(() => ({}));
 		throw new Error(
@@ -77,7 +80,7 @@ export async function fetchHuobiPrice(symbol: string): Promise<MarketDetail> {
 			`/api/huobi/${symbol}`,
 			"Huobi API error"
 		);
-		if (data && data.tick) {
+		if (data) {
 			return {
 				price: data.tick.close,
 				timestamp: data.ts,
@@ -90,6 +93,44 @@ export async function fetchHuobiPrice(symbol: string): Promise<MarketDetail> {
 		}
 	} catch (error) {
 		console.error(`Error fetching Huobi price for ${symbol}:`, error);
+		throw error;
+	}
+}
+
+export async function fetchCoinGeckoPrice(): Promise<number> {
+	try {
+		const data = await fetcher<CoinGeckoApiResponse>(
+			"/api/coingecko/usdtmyr",
+			"CoinGecko API error"
+		);
+		if (data) {
+			return data.tether.myr;
+		} else {
+			throw new Error(
+				"CoinGecko API returned unexpected data structure for USDT/MYR."
+			);
+		}
+	} catch (error) {
+		console.error("Error fetching CoinGecko USDT/MYR price:", error);
+		throw error;
+	}
+}
+
+export async function fetchBnmPrice(): Promise<BnmExchangeRate> {
+	try {
+		const data = await fetcher<BnmExchangeRate>(
+			"/api/bnm/usdmyr",
+			"BNM API error"
+		);
+		if (data) {
+			return data;
+		} else {
+			throw new Error(
+				"BNM API returned unexpected data structure for USD/MYR."
+			);
+		}
+	} catch (error) {
+		console.error("Error fetching BNM USD/MYR price:", error);
 		throw error;
 	}
 }

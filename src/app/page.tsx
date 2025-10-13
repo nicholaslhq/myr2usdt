@@ -1,12 +1,15 @@
 "use client";
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
 	fetchLunoPrice,
 	fetchBinancePrice,
 	fetchHuobiPrice,
+	fetchCoinGeckoPrice,
+	fetchBnmPrice,
 	MarketDetail,
 } from "../lib/api";
+import { BnmExchangeRate } from "../app/api/bnm/usdmyr/route";
 
 interface ExchangeRateDetails {
 	rate: number;
@@ -37,6 +40,33 @@ export default function Home() {
 	const [error, setError] = useState<string | null>(null);
 	const [loading, setLoading] = useState(false);
 	const [showDetails, setShowDetails] = useState(false);
+	const [usdtMyrPrice, setUsdtMyrPrice] = useState<number | null>(null);
+	const [usdMyrRate, setUsdMyrRate] = useState<BnmExchangeRate | null>(null);
+
+	useEffect(() => {
+		const getUsdtMyrPrice = async () => {
+			try {
+				const price = await fetchCoinGeckoPrice();
+				setUsdtMyrPrice(price);
+			} catch (err) {
+				console.error("Error fetching CoinGecko USDT/MYR price:", err);
+			}
+		};
+		getUsdtMyrPrice();
+
+		const getBnmUsdMyrPrice = async () => {
+			try {
+				const rate = await fetchBnmPrice();
+				setUsdMyrRate(rate);
+			} catch (err) {
+				console.error("Error fetching BNM USD/MYR price:", err);
+			}
+		};
+		getBnmUsdMyrPrice();
+
+		// Auto-fetch and calculate rate on page load for the default pair
+		calculateExchangeRate();
+	}, []); // Run once on component mount
 
 	const calculateExchangeRate = async () => {
 		setLoading(true);
@@ -208,6 +238,19 @@ export default function Home() {
 
 				{error && (
 					<div className="text-red-500 text-center mt-4">{error}</div>
+				)}
+
+				{usdtMyrPrice && (
+					<div className="mt-4 p-3 bg-green-50 rounded-lg text-center text-md font-semibold text-green-800 border border-green-200">
+						CoinGecko USDT/MYR: {usdtMyrPrice.toFixed(4)} MYR
+					</div>
+				)}
+
+				{usdMyrRate && usdMyrRate.rate.middle_rate && (
+					<div className="mt-4 p-3 bg-purple-50 rounded-lg text-center text-md font-semibold text-purple-800 border border-purple-200">
+						BNM USD/MYR: {usdMyrRate.rate.middle_rate.toFixed(4)}{" "}
+						MYR
+					</div>
 				)}
 
 				{exchangeRateDetails && (
