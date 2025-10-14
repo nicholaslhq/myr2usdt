@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
+import NumberFlow from "@number-flow/react";
 import { ArrowRight, CircleDollarSign, Info, RefreshCw } from "lucide-react";
 import {
 	fetchLunoPrice,
@@ -84,7 +85,6 @@ export default function Home() {
 	const calculateExchangeRate = useCallback(async () => {
 		setLoading(true);
 		setError(null);
-		setExchangeRateDetails(null);
 
 		try {
 			let sourceData: MarketDetail;
@@ -189,24 +189,33 @@ export default function Home() {
 	return (
 		<div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
 			<Card className="w-full max-w-md">
-				<CardHeader>
-					<CardTitle className="text-xs font-bold text-center text-gray-800 mb-6">
+				<CardHeader className="flex items-center justify-center">
+					<CardTitle className="text-sm font-bold text-center text-gray-800">
 						MYR2USDT
 					</CardTitle>
 				</CardHeader>
 
 				{exchangeRateDetails ? (
 					<CardContent>
-						<div
-							id="exchange-rate"
-							className="text-center text-8xl font-semibold"
-						>
-							{exchangeRateDetails.rate.toFixed(4)}
+						<div id="exchange-rate" className="text-center">
+							<NumberFlow
+								value={parseFloat(
+									exchangeRateDetails.rate.toFixed(4)
+								)}
+								format={{
+									notation: "standard",
+									maximumFractionDigits: 4,
+									minimumFractionDigits: 4,
+								}}
+								className={`text-center text-8xl font-semibold ${
+									loading ? "opacity-50" : ""
+								}`}
+							/>
 						</div>
 					</CardContent>
 				) : (
 					<CardContent>
-						<Skeleton className="h-24 w-full" />
+						<Skeleton className="h-24 my-6 w-full" />
 					</CardContent>
 				)}
 
@@ -247,7 +256,7 @@ export default function Home() {
 							</TooltipContent>
 						</Tooltip>
 					) : (
-						<Skeleton className="h-7 w-24" />
+						<Skeleton className="h-8 w-24" />
 					)}
 					{coinbaseRate ? (
 						<Tooltip>
@@ -279,7 +288,7 @@ export default function Home() {
 							</TooltipContent>
 						</Tooltip>
 					) : (
-						<Skeleton className="h-7 w-24" />
+						<Skeleton className="h-8 w-24" />
 					)}
 					{bnmRate?.rate.middle_rate ? (
 						<Tooltip>
@@ -313,7 +322,7 @@ export default function Home() {
 							</TooltipContent>
 						</Tooltip>
 					) : (
-						<Skeleton className="h-7 w-24" />
+						<Skeleton className="h-8 w-24" />
 					)}
 				</CardContent>
 
@@ -322,7 +331,6 @@ export default function Home() {
 						value={sourcePlatform}
 						onValueChange={(value) => {
 							setSourcePlatform(value);
-							calculateExchangeRate();
 						}}
 					>
 						<SelectTrigger
@@ -346,7 +354,6 @@ export default function Home() {
 						value={targetPlatform}
 						onValueChange={(value) => {
 							setTargetPlatform(value);
-							calculateExchangeRate();
 						}}
 					>
 						<SelectTrigger
@@ -370,7 +377,6 @@ export default function Home() {
 						value={cryptoAsset}
 						onValueChange={(value) => {
 							setCryptoAsset(value);
-							calculateExchangeRate();
 						}}
 					>
 						<SelectTrigger id="crypto-asset" className="w-[100px]">
