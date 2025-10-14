@@ -4,6 +4,11 @@ import { HuobiApiResponse } from "@/app/api/huobi/[symbol]/route";
 import { HataApiResponse } from "@/app/api/hata/[pair]/route";
 import { CoinGeckoApiResponse } from "@/app/api/coingecko/usdtmyr/route";
 import { BnmExchangeRate } from "@/app/api/bnm/usdmyr/route";
+import { getCache, setCache } from "@/lib/cache";
+
+const COINGECKO_CACHE_KEY = "coingecko-usdtmyr-price";
+const BNM_CACHE_KEY = "bnm-usdmyr-price";
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes in milliseconds
 
 export interface MarketDetail {
 	timestamp: number;
@@ -99,20 +104,36 @@ export async function fetchHuobiPrice(symbol: string): Promise<MarketDetail> {
 }
 
 export async function fetchCoinGeckoPrice(): Promise<number> {
+	const cachedRate = getCache<number>(COINGECKO_CACHE_KEY);
+	if (cachedRate) {
+		return cachedRate;
+	}
+
 	try {
 		const data = await fetcher<CoinGeckoApiResponse>(
 			"/api/coingecko/usdtmyr",
 			"CoinGecko API error"
 		);
 		if (data) {
+			setCache(COINGECKO_CACHE_KEY, data.tether.myr, CACHE_TTL);
 			return data.tether.myr;
 		} else {
 			throw new Error(
 				"CoinGecko API returned unexpected data structure for USDT/MYR."
 			);
 		}
-	} catch (error) {
+	} catch (error: unknown) {
 		console.error("Error fetching CoinGecko USDT/MYR price:", error);
+		if (
+			error instanceof Error &&
+			error.message.includes("Too Many Requests") &&
+			cachedRate
+		) {
+			console.warn(
+				"Using cached CoinGecko price due to Too Many Requests error."
+			);
+			return cachedRate;
+		}
 		throw error;
 	}
 }
@@ -146,20 +167,40 @@ export async function fetchHataPrice(pair: string): Promise<MarketDetail> {
 }
 
 export async function fetchBnmPrice(): Promise<BnmExchangeRate> {
+	const cachedRate = getCache<BnmExchangeRate>(BNM_CACHE_KEY);
+	if (cachedRate) {
+		return cachedRate;
+	}
+
 	try {
 		const data = await fetcher<BnmExchangeRate>(
 			"/api/bnm/usdmyr",
-			"BNM API error"
+			"BNM API error",
+			{
+				headers: {
+					Accept: "application/vnd.BNM.API.v1+json",
+				},
+			}
 		);
+
 		if (data) {
+			setCache(BNM_CACHE_KEY, data, CACHE_TTL);
 			return data;
 		} else {
-			throw new Error(
-				"BNM API returned unexpected data structure for USD/MYR."
-			);
+			throw new Error("BNM API returned unexpected data structure.");
 		}
-	} catch (error) {
+	} catch (error: unknown) {
 		console.error("Error fetching BNM USD/MYR price:", error);
+		if (
+			error instanceof Error &&
+			error.message.includes("Too Many Requests") &&
+			cachedRate
+		) {
+			console.warn(
+				"Using cached BNM price due to Too Many Requests error."
+			);
+			return cachedRate;
+		}
 		throw error;
 	}
 }
