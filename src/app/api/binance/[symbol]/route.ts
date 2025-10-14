@@ -27,7 +27,7 @@ export interface BinanceApiResponse {
 
 export async function GET(
 	request: Request,
-	{ params }: { params: { symbol: string } }
+	{ params }: { params: Promise<{ symbol: string }> }
 ) {
 	const { symbol } = await params;
 	const upperCaseSymbol = symbol.toUpperCase();

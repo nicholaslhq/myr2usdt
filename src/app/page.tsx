@@ -78,7 +78,6 @@ export default function Home() {
 	const [cryptoAsset, setCryptoAsset] = useState("xrp");
 	const [exchangeRateDetails, setExchangeRateDetails] =
 		useState<ExchangeRateDetails | null>(null);
-	const [error, setError] = useState<string | null>(null);
 	const [loading, setLoading] = useState(false);
 	const [coinGeckoRate, setCoinGeckoRate] = useState<number | null>(null);
 	const [coinbaseRate, setCoinbaseRate] = useState<number | null>(null);

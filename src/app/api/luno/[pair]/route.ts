@@ -13,7 +13,7 @@ export interface LunoApiResponse {
 
 export async function GET(
 	request: Request,
-	{ params }: { params: { pair: string } }
+	{ params }: { params: Promise<{ pair: string }> }
 ) {
 	const { pair } = await params;
 	const upperCasePair = pair.toUpperCase();
