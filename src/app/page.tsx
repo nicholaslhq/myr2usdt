@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
 import NumberFlow from "@number-flow/react";
+import Image from "next/image";
 import { ArrowRight, CircleDollarSign, Info, RefreshCw } from "lucide-react";
 import {
 	fetchLunoPrice,
@@ -190,8 +191,15 @@ export default function Home() {
 		<div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
 			<Card className="w-full max-w-md">
 				<CardHeader className="flex items-center justify-center">
-					<CardTitle className="text-sm font-bold text-center text-gray-800">
-						MYR2USDT
+					<CardTitle className="flex items-center gap-2 text-md font-bold text-gray-800">
+						<Image
+							src="/favicon/favicon.svg"
+							alt="MYR2USDT Logo"
+							width={24}
+							height={24}
+							className="h-6 w-6"
+						/>
+						<span>MYR2USDT</span>
 					</CardTitle>
 				</CardHeader>
 
