@@ -1,6 +1,7 @@
 import { LunoApiResponse } from "@/app/api/luno/[pair]/route";
 import { BinanceApiResponse } from "@/app/api/binance/[symbol]/route";
 import { HuobiApiResponse } from "@/app/api/huobi/[symbol]/route";
+import { HataApiResponse } from "@/app/api/hata/[pair]/route";
 import { CoinGeckoApiResponse } from "@/app/api/coingecko/usdtmyr/route";
 import { BnmExchangeRate } from "@/app/api/bnm/usdmyr/route";
 
@@ -112,6 +113,34 @@ export async function fetchCoinGeckoPrice(): Promise<number> {
 		}
 	} catch (error) {
 		console.error("Error fetching CoinGecko USDT/MYR price:", error);
+		throw error;
+	}
+}
+
+export async function fetchHataPrice(pair: string): Promise<MarketDetail> {
+	try {
+		const data = await fetcher<HataApiResponse>(
+			`/api/hata/${pair}`,
+			"Hata API error"
+		);
+		if (data && data.exchangeInfo && data.orderBook) {
+			const bid = parseFloat(data.orderBook.bids[0]?.price || "0");
+			const ask = parseFloat(data.orderBook.asks[0]?.price || "0");
+			const price = parseFloat(data.exchangeInfo.price);
+			const volume = parseFloat(data.exchangeInfo.quote_volume);
+
+			return {
+				price: price,
+				timestamp: Date.now(), // Hata API does not provide timestamp, use current time
+				bid: bid,
+				ask: ask,
+				volume: volume,
+			};
+		} else {
+			throw new Error("Hata API returned unexpected data structure.");
+		}
+	} catch (error) {
+		console.error(`Error fetching Hata price for ${pair}:`, error);
 		throw error;
 	}
 }

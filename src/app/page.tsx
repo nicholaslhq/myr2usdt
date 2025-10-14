@@ -5,6 +5,7 @@ import {
 	fetchLunoPrice,
 	fetchBinancePrice,
 	fetchHuobiPrice,
+	fetchHataPrice,
 	fetchCoinGeckoPrice,
 	fetchBnmPrice,
 	MarketDetail,
@@ -82,13 +83,16 @@ export default function Home() {
 		setExchangeRateDetails(null);
 
 		try {
-			let lunoData: MarketDetail;
+			let sourceData: MarketDetail;
 			let targetData: MarketDetail;
 
-			// Fetch price from source platform (Luno - MYR)
+			// Fetch price from source platform (Luno/Hata - MYR)
 			if (sourcePlatform === "luno") {
 				const lunoPair = `${cryptoAsset.toUpperCase()}MYR`;
-				lunoData = await fetchLunoPrice(lunoPair);
+				sourceData = await fetchLunoPrice(lunoPair);
+			} else if (sourcePlatform === "hata") {
+				const hataPair = `${cryptoAsset.toUpperCase()}MYR`;
+				sourceData = await fetchHataPrice(hataPair);
 			} else {
 				throw new Error("Unsupported source platform.");
 			}
@@ -104,17 +108,19 @@ export default function Home() {
 				throw new Error("Unsupported target platform.");
 			}
 
-			if (lunoData.price && targetData.price) {
-				const rate = lunoData.price / targetData.price;
+			if (sourceData.price && targetData.price) {
+				const rate = sourceData.price / targetData.price;
 				setExchangeRateDetails({
 					rate,
 					source: {
-						platform: "Luno",
-						price: lunoData.price,
-						timestamp: lunoData.timestamp,
-						bid: lunoData.bid,
-						ask: lunoData.ask,
-						volume: lunoData.volume,
+						platform:
+							sourcePlatform.charAt(0).toUpperCase() +
+							sourcePlatform.slice(1),
+						price: sourceData.price,
+						timestamp: sourceData.timestamp,
+						bid: sourceData.bid,
+						ask: sourceData.ask,
+						volume: sourceData.volume,
 					},
 					target: {
 						platform:
@@ -246,6 +252,7 @@ export default function Home() {
 							<SelectGroup>
 								<SelectLabel>Source</SelectLabel>
 								<SelectItem value="luno">Luno</SelectItem>
+								<SelectItem value="hata">Hata</SelectItem>
 							</SelectGroup>
 						</SelectContent>
 					</Select>
