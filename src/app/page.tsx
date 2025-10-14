@@ -40,6 +40,7 @@ import {
 	DialogClose,
 } from "../components/ui/dialog";
 import { Badge } from "../components/ui/badge";
+import { Avatar, AvatarImage, AvatarFallback } from "../components/ui/avatar";
 import {
 	Tooltip,
 	TooltipContent,
@@ -218,9 +219,27 @@ export default function Home() {
 					{coinGeckoRate ? (
 						<Tooltip>
 							<TooltipTrigger asChild>
-								<Badge variant="secondary" className="text-sm">
-									CG: {coinGeckoRate.toFixed(4)}
-								</Badge>
+								<a
+									href="https://www.coingecko.com/en/coins/tether/myr"
+									target="_blank"
+									rel="noopener noreferrer"
+								>
+									<Badge
+										variant="secondary"
+										className="text-sm"
+									>
+										<Avatar className="size-6">
+											<AvatarImage
+												src="/images/coingecko-logo.webp"
+												alt="CoinGecko"
+											/>
+											<AvatarFallback>CG</AvatarFallback>
+										</Avatar>
+										<span className="text-sm font-medium">
+											{coinGeckoRate.toFixed(4)}
+										</span>
+									</Badge>
+								</a>
 							</TooltipTrigger>
 							<TooltipContent>
 								<p>CoinGecko USDT/MYR price</p>
@@ -232,9 +251,27 @@ export default function Home() {
 					{coinbaseRate ? (
 						<Tooltip>
 							<TooltipTrigger asChild>
-								<Badge variant="secondary" className="text-sm">
-									CB: {coinbaseRate.toFixed(4)}
-								</Badge>
+								<a
+									href="https://www.coinbase.com/converter/usdt/myr"
+									target="_blank"
+									rel="noopener noreferrer"
+								>
+									<Badge
+										variant="secondary"
+										className="text-sm"
+									>
+										<Avatar className="size-6">
+											<AvatarImage
+												src="/images/coinbase-logo.webp"
+												alt="Coinbase"
+											/>
+											<AvatarFallback>CB</AvatarFallback>
+										</Avatar>
+										<span className="text-sm font-medium">
+											{coinbaseRate.toFixed(4)}
+										</span>
+									</Badge>
+								</a>
 							</TooltipTrigger>
 							<TooltipContent>
 								<p>Coinbase USDT/MYR price</p>
@@ -246,9 +283,29 @@ export default function Home() {
 					{bnmRate?.rate.middle_rate ? (
 						<Tooltip>
 							<TooltipTrigger asChild>
-								<Badge variant="secondary" className="text-sm">
-									BNM: {bnmRate.rate.middle_rate.toFixed(4)}
-								</Badge>
+								<a
+									href="https://www.bnm.gov.my/exchange-rates#:~:text=USD"
+									target="_blank"
+									rel="noopener noreferrer"
+								>
+									<Badge
+										variant="secondary"
+										className="text-sm"
+									>
+										<Avatar className="size-6">
+											<AvatarImage
+												src="/images/bnm-logo.webp"
+												alt="BNM"
+											/>
+											<AvatarFallback>BNM</AvatarFallback>
+										</Avatar>
+										<span className="text-sm font-medium">
+											{bnmRate.rate.middle_rate.toFixed(
+												4
+											)}
+										</span>
+									</Badge>
+								</a>
 							</TooltipTrigger>
 							<TooltipContent>
 								<p>Bank Negara Malaysia USD/MYR middle rate</p>
