@@ -7,6 +7,7 @@ import {
 	fetchHuobiPrice,
 	fetchHataPrice,
 	fetchCoinGeckoPrice,
+	fetchCoinbasePrice,
 	fetchBnmPrice,
 	MarketDetail,
 } from "../lib/api";
@@ -74,8 +75,9 @@ export default function Home() {
 		useState<ExchangeRateDetails | null>(null);
 	const [error, setError] = useState<string | null>(null);
 	const [loading, setLoading] = useState(false);
-	const [usdtMyrPrice, setUsdtMyrPrice] = useState<number | null>(null);
-	const [usdMyrRate, setUsdMyrRate] = useState<BnmExchangeRate | null>(null);
+	const [coinGeckoRate, setCoinGeckoRate] = useState<number | null>(null);
+	const [coinbaseRate, setCoinbaseRate] = useState<number | null>(null);
+	const [bnmRate, setBnmRate] = useState<BnmExchangeRate | null>(null);
 
 	const calculateExchangeRate = useCallback(async () => {
 		setLoading(true);
@@ -148,20 +150,30 @@ export default function Home() {
 	}, [sourcePlatform, targetPlatform, cryptoAsset]);
 
 	useEffect(() => {
-		const getUsdtMyrPrice = async () => {
+		const getCoinGeckoRate = async () => {
 			try {
 				const price = await fetchCoinGeckoPrice();
-				setUsdtMyrPrice(price);
+				setCoinGeckoRate(price);
 			} catch (err) {
 				console.error("Error fetching CoinGecko USDT/MYR price:", err);
 			}
 		};
-		getUsdtMyrPrice();
+		getCoinGeckoRate();
+
+		const getCoinbaseRate = async () => {
+			try {
+				const price = await fetchCoinbasePrice();
+				setCoinbaseRate(price);
+			} catch (err) {
+				console.error("Error fetching Coinbase USDT/MYR price:", err);
+			}
+		};
+		getCoinbaseRate();
 
 		const getBnmUsdMyrPrice = async () => {
 			try {
 				const rate = await fetchBnmPrice();
-				setUsdMyrRate(rate);
+				setBnmRate(rate);
 			} catch (err) {
 				console.error("Error fetching BNM USD/MYR price:", err);
 			}
@@ -203,11 +215,11 @@ export default function Home() {
 				)}
 
 				<CardContent className="mt-4 flex justify-center space-x-2">
-					{usdtMyrPrice ? (
+					{coinGeckoRate ? (
 						<Tooltip>
 							<TooltipTrigger asChild>
 								<Badge variant="secondary" className="text-sm">
-									CG: {usdtMyrPrice.toFixed(4)}
+									CG: {coinGeckoRate.toFixed(4)}
 								</Badge>
 							</TooltipTrigger>
 							<TooltipContent>
@@ -217,12 +229,25 @@ export default function Home() {
 					) : (
 						<Skeleton className="h-7 w-24" />
 					)}
-					{usdMyrRate?.rate.middle_rate ? (
+					{coinbaseRate ? (
 						<Tooltip>
 							<TooltipTrigger asChild>
 								<Badge variant="secondary" className="text-sm">
-									BNM:{" "}
-									{usdMyrRate.rate.middle_rate.toFixed(4)}
+									CB: {coinbaseRate.toFixed(4)}
+								</Badge>
+							</TooltipTrigger>
+							<TooltipContent>
+								<p>Coinbase USDT/MYR price</p>
+							</TooltipContent>
+						</Tooltip>
+					) : (
+						<Skeleton className="h-7 w-24" />
+					)}
+					{bnmRate?.rate.middle_rate ? (
+						<Tooltip>
+							<TooltipTrigger asChild>
+								<Badge variant="secondary" className="text-sm">
+									BNM: {bnmRate.rate.middle_rate.toFixed(4)}
 								</Badge>
 							</TooltipTrigger>
 							<TooltipContent>

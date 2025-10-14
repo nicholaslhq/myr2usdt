@@ -3,10 +3,12 @@ import { BinanceApiResponse } from "@/app/api/binance/[symbol]/route";
 import { HuobiApiResponse } from "@/app/api/huobi/[symbol]/route";
 import { HataApiResponse } from "@/app/api/hata/[pair]/route";
 import { CoinGeckoApiResponse } from "@/app/api/coingecko/usdtmyr/route";
+import { CoinbaseApiResponse } from "@/app/api/coinbase/usdtmyr/route";
 import { BnmExchangeRate } from "@/app/api/bnm/usdmyr/route";
 import { getCache, setCache } from "@/lib/cache";
 
 const COINGECKO_CACHE_KEY = "coingecko-usdtmyr-price";
+const COINBASE_CACHE_KEY = "coinbase-usdtmyr-price";
 const BNM_CACHE_KEY = "bnm-usdmyr-price";
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes in milliseconds
 
@@ -114,7 +116,7 @@ export async function fetchCoinGeckoPrice(): Promise<number> {
 			"/api/coingecko/usdtmyr",
 			"CoinGecko API error"
 		);
-		if (data) {
+		if (data && data.tether && data.tether.myr) {
 			setCache(COINGECKO_CACHE_KEY, data.tether.myr, CACHE_TTL);
 			return data.tether.myr;
 		} else {
@@ -131,6 +133,43 @@ export async function fetchCoinGeckoPrice(): Promise<number> {
 		) {
 			console.warn(
 				"Using cached CoinGecko price due to Too Many Requests error."
+			);
+			return cachedRate;
+		}
+		throw error;
+	}
+}
+
+export async function fetchCoinbasePrice(): Promise<number> {
+	const cachedRate = getCache<number>(COINBASE_CACHE_KEY);
+	if (cachedRate) {
+		return cachedRate;
+	}
+
+	try {
+		const data = await fetcher<CoinbaseApiResponse>(
+			"/api/coinbase/usdtmyr",
+			"Coinbase API error"
+		);
+		console.log(data);
+		if (data && data.data && data.data.amount) {
+			const price = parseFloat(data.data.amount);
+			setCache(COINBASE_CACHE_KEY, price, CACHE_TTL);
+			return price;
+		} else {
+			throw new Error(
+				"Coinbase API returned unexpected data structure for USDT/MYR."
+			);
+		}
+	} catch (error: unknown) {
+		console.error("Error fetching Coinbase USDT/MYR price:", error);
+		if (
+			error instanceof Error &&
+			error.message.includes("Too Many Requests") &&
+			cachedRate
+		) {
+			console.warn(
+				"Using cached Coinbase price due to Too Many Requests error."
 			);
 			return cachedRate;
 		}
