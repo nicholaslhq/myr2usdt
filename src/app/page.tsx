@@ -50,6 +50,7 @@ import {
 } from "../components/ui/tooltip";
 import { Skeleton } from "../components/ui/skeleton";
 import { Separator } from "../components/ui/separator";
+import { toast } from "sonner";
 
 interface ExchangeRateDetails {
 	rate: number;
@@ -85,7 +86,6 @@ export default function Home() {
 
 	const calculateExchangeRate = useCallback(async () => {
 		setLoading(true);
-		setError(null);
 
 		try {
 			let sourceData: MarketDetail;
@@ -142,11 +142,12 @@ export default function Home() {
 				throw new Error("Could not fetch prices for both platforms.");
 			}
 		} catch (err: unknown) {
-			setError(
-				err instanceof Error
-					? err.message
-					: "An unknown error occurred."
-			);
+			toast.error("Oops! Something went wrong", {
+				description:
+					err instanceof Error
+						? err.message
+						: "An unknown error occurred.",
+			});
 		} finally {
 			setLoading(false);
 		}
@@ -157,8 +158,13 @@ export default function Home() {
 			try {
 				const price = await fetchCoinGeckoPrice();
 				setCoinGeckoRate(price);
-			} catch (err) {
-				console.error("Error fetching CoinGecko USDT/MYR price:", err);
+			} catch (err: unknown) {
+				toast.error("Error fetching CoinGecko price", {
+					description:
+						err instanceof Error
+							? err.message
+							: "An unknown error occurred.",
+				});
 			}
 		};
 		getCoinGeckoRate();
@@ -167,8 +173,13 @@ export default function Home() {
 			try {
 				const price = await fetchCoinbasePrice();
 				setCoinbaseRate(price);
-			} catch (err) {
-				console.error("Error fetching Coinbase USDT/MYR price:", err);
+			} catch (err: unknown) {
+				toast.error("Error fetching Coinbase price", {
+					description:
+						err instanceof Error
+							? err.message
+							: "An unknown error occurred.",
+				});
 			}
 		};
 		getCoinbaseRate();
@@ -177,8 +188,13 @@ export default function Home() {
 			try {
 				const rate = await fetchBnmPrice();
 				setBnmRate(rate);
-			} catch (err) {
-				console.error("Error fetching BNM USD/MYR price:", err);
+			} catch (err: unknown) {
+				toast.error("Error fetching BNM price", {
+					description:
+						err instanceof Error
+							? err.message
+							: "An unknown error occurred.",
+				});
 			}
 		};
 		getBnmUsdMyrPrice();
@@ -224,12 +240,6 @@ export default function Home() {
 				) : (
 					<CardContent>
 						<Skeleton className="h-24 my-6 w-full" />
-					</CardContent>
-				)}
-
-				{error && (
-					<CardContent className="text-red-500 text-center mt-4">
-						{error}
 					</CardContent>
 				)}
 
