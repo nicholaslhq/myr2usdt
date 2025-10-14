@@ -47,6 +47,7 @@ import {
 	TooltipTrigger,
 } from "../components/ui/tooltip";
 import { Skeleton } from "../components/ui/skeleton";
+import { Separator } from "../components/ui/separator";
 
 interface ExchangeRateDetails {
 	rate: number;
@@ -406,7 +407,19 @@ export default function Home() {
 									rate.
 								</DialogDescription>
 							</DialogHeader>
-							{exchangeRateDetails && (
+							{loading && !exchangeRateDetails ? (
+								<div className="grid gap-4 py-4">
+									<Skeleton className="h-12 w-3/4" />
+									<Skeleton className="h-8 w-full" />
+									<Skeleton className="h-8 w-full" />
+									<Skeleton className="h-8 w-full" />
+									<Separator />
+									<Skeleton className="h-12 w-3/4" />
+									<Skeleton className="h-8 w-full" />
+									<Skeleton className="h-8 w-full" />
+									<Skeleton className="h-8 w-full" />
+								</div>
+							) : exchangeRateDetails ? (
 								<div className="grid gap-4 py-4">
 									<div className="grid grid-cols-2 gap-4">
 										<div className="col-span-2 text-lg font-semibold flex items-center gap-2">
@@ -483,6 +496,8 @@ export default function Home() {
 										</div>
 									</div>
 
+									<Separator />
+
 									<div className="grid grid-cols-2 gap-4">
 										<div className="col-span-2 text-lg font-semibold flex items-center gap-2">
 											Target
@@ -558,7 +573,7 @@ export default function Home() {
 										</div>
 									</div>
 								</div>
-							)}
+							) : null}
 							<DialogFooter>
 								<DialogClose asChild>
 									<Button type="button">Close</Button>
