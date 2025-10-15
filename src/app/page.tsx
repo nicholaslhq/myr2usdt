@@ -82,9 +82,11 @@ export default function Home() {
 	const [coinGeckoRate, setCoinGeckoRate] = useState<number | null>(null);
 	const [coinbaseRate, setCoinbaseRate] = useState<number | null>(null);
 	const [bnmRate, setBnmRate] = useState<BnmExchangeRate | null>(null);
+	const [hasError, setHasError] = useState(false);
 
 	const calculateExchangeRate = useCallback(async () => {
 		setLoading(true);
+		setHasError(false); // Reset error state at the beginning of a new calculation
 
 		try {
 			let sourceData: MarketDetail;
@@ -141,6 +143,7 @@ export default function Home() {
 				throw new Error("Could not fetch prices for both platforms.");
 			}
 		} catch (err: unknown) {
+			setHasError(true); // Set error state to true
 			toast.error("Oops! Something went wrong", {
 				description:
 					err instanceof Error
@@ -220,25 +223,42 @@ export default function Home() {
 
 				{exchangeRateDetails ? (
 					<CardContent>
-						<div id="exchange-rate" className="text-center">
-							<NumberFlow
-								value={parseFloat(
-									exchangeRateDetails.rate.toFixed(4)
+						<div className="text-center">
+							<Tooltip>
+								<TooltipTrigger asChild>
+									<NumberFlow
+										value={parseFloat(
+											exchangeRateDetails.rate.toFixed(4)
+										)}
+										format={{
+											notation: "standard",
+											maximumFractionDigits: 4,
+											minimumFractionDigits: 4,
+										}}
+										className={`text-center text-8xl font-semibold ${
+											loading ? "opacity-50" : ""
+										} ${
+											hasError
+												? "text-red-600 opacity-50"
+												: ""
+										}`}
+									/>
+								</TooltipTrigger>
+								{hasError && (
+									<TooltipContent sideOffset={-30}>
+										<p>Error fetching exchange rate</p>
+									</TooltipContent>
 								)}
-								format={{
-									notation: "standard",
-									maximumFractionDigits: 4,
-									minimumFractionDigits: 4,
-								}}
-								className={`text-center text-8xl font-semibold ${
-									loading ? "opacity-50" : ""
-								}`}
-							/>
+							</Tooltip>
 						</div>
 					</CardContent>
 				) : (
 					<CardContent>
-						<Skeleton className="h-24 my-6 w-full" />
+						<div className="flex items-baseline justify-center gap-2 my-6">
+							<Skeleton className="h-24 w-16" />
+							<Skeleton className="h-4 w-4" />
+							<Skeleton className="h-24 w-50" />
+						</div>
 					</CardContent>
 				)}
 
@@ -607,7 +627,9 @@ export default function Home() {
 					<Button
 						onClick={calculateExchangeRate}
 						className="w-1/2"
-						disabled={loading || !exchangeRateDetails}
+						disabled={
+							loading || (!exchangeRateDetails && !hasError)
+						}
 					>
 						<RefreshCw
 							className={
