@@ -1,7 +1,6 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
 import NumberFlow from "@number-flow/react";
-import Image from "next/image";
 import { ArrowRight, CircleDollarSign, Info, RefreshCw } from "lucide-react";
 import {
 	fetchLunoPrice,
@@ -82,6 +81,9 @@ export default function Home() {
 	const [coinGeckoRate, setCoinGeckoRate] = useState<number | null>(null);
 	const [coinbaseRate, setCoinbaseRate] = useState<number | null>(null);
 	const [bnmRate, setBnmRate] = useState<BnmExchangeRate | null>(null);
+	const [coinGeckoDiff, setCoinGeckoDiff] = useState<number | null>(null);
+	const [coinbaseDiff, setCoinbaseDiff] = useState<number | null>(null);
+	const [bnmDiff, setBnmDiff] = useState<number | null>(null);
 	const [hasError, setHasError] = useState(false);
 
 	const calculateExchangeRate = useCallback(async () => {
@@ -205,18 +207,36 @@ export default function Home() {
 		calculateExchangeRate();
 	}, [sourcePlatform, targetPlatform, cryptoAsset, calculateExchangeRate]); // Re-run when dropdowns change
 
+	useEffect(() => {
+		if (exchangeRateDetails?.rate) {
+			const baseRate = exchangeRateDetails.rate;
+
+			if (coinGeckoRate) {
+				setCoinGeckoDiff(((coinGeckoRate - baseRate) / baseRate) * 100);
+			}
+			if (coinbaseRate) {
+				setCoinbaseDiff(((coinbaseRate - baseRate) / baseRate) * 100);
+			}
+			if (bnmRate?.rate.middle_rate) {
+				setBnmDiff(
+					((bnmRate.rate.middle_rate - baseRate) / baseRate) * 100
+				);
+			}
+		}
+	}, [exchangeRateDetails, coinGeckoRate, coinbaseRate, bnmRate]);
+
 	return (
 		<div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
 			<Card className="w-full max-w-md">
 				<CardHeader className="flex items-center justify-center">
 					<CardTitle className="flex items-center gap-2 text-md font-bold text-gray-800">
-						<Image
-							src="/favicon/favicon.svg"
-							alt="MYR2USDT Logo"
-							width={24}
-							height={24}
-							className="h-6 w-6"
-						/>
+						<Avatar className="size-6">
+							<AvatarImage
+								src="/favicon/favicon.svg"
+								alt="MYR2USDT Logo"
+							/>
+							<AvatarFallback>M2U</AvatarFallback>
+						</Avatar>
 						<span>MYR2USDT</span>
 					</CardTitle>
 				</CardHeader>
@@ -262,7 +282,7 @@ export default function Home() {
 					</CardContent>
 				)}
 
-				<CardContent className="mt-4 flex justify-center space-x-2">
+				<CardContent className="mt-4 flex flex-wrap justify-center gap-2">
 					{coinGeckoRate ? (
 						<Tooltip>
 							<TooltipTrigger asChild>
@@ -285,6 +305,17 @@ export default function Home() {
 										<span className="text-sm font-medium">
 											{coinGeckoRate.toFixed(4)}
 										</span>
+										{coinGeckoDiff !== null && (
+											<span
+												className={`text-xs ${
+													coinGeckoDiff >= 0
+														? "text-green-500"
+														: "text-red-500"
+												}`}
+											>
+												({coinGeckoDiff.toFixed(2)}%)
+											</span>
+										)}
 									</Badge>
 								</a>
 							</TooltipTrigger>
@@ -317,6 +348,17 @@ export default function Home() {
 										<span className="text-sm font-medium">
 											{coinbaseRate.toFixed(4)}
 										</span>
+										{coinbaseDiff !== null && (
+											<span
+												className={`text-xs ${
+													coinbaseDiff >= 0
+														? "text-green-500"
+														: "text-red-500"
+												}`}
+											>
+												({coinbaseDiff.toFixed(2)}%)
+											</span>
+										)}
 									</Badge>
 								</a>
 							</TooltipTrigger>
@@ -351,6 +393,17 @@ export default function Home() {
 												4
 											)}
 										</span>
+										{bnmDiff !== null && (
+											<span
+												className={`text-xs ${
+													bnmDiff >= 0
+														? "text-green-500"
+														: "text-red-500"
+												}`}
+											>
+												({bnmDiff.toFixed(2)}%)
+											</span>
+										)}
 									</Badge>
 								</a>
 							</TooltipTrigger>
