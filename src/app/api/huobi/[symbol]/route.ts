@@ -26,8 +26,9 @@ export async function GET(
 ) {
 	const { symbol } = await params;
 	try {
+		const lowerCaseSymbol = symbol.toLowerCase();
 		const data = await fetcher<HuobiApiResponse>(
-			`https://api.huobi.pro/market/detail/merged?symbol=${symbol}`,
+			`https://api.huobi.pro/market/detail/merged?symbol=${lowerCaseSymbol}`,
 			"Huobi API error"
 		);
 

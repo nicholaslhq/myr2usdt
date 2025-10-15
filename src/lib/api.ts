@@ -23,24 +23,63 @@ export interface MarketDetail {
 export async function fetcher<T>(
 	url: string,
 	errorMessage: string,
-	options?: RequestInit
+	options?: RequestInit,
+	clientFallbackUrl?: string,
+	clientFallbackOptions?: RequestInit
 ): Promise<T> {
-	const response = await fetch(url, options);
-	if (!response.ok) {
-		const errorData = await response.json().catch(() => ({}));
+	try {
+		const response = await fetch(url, options);
+		if (!response.ok) {
+			throw new Error(
+				`${errorMessage}: Server-side fetch failed: ${response.statusText}`
+			);
+		}
+		const result = await response.json();
+		return result;
+	} catch (serverError: unknown) {
+		console.warn(`Server-side fetch error for ${url}:`, serverError);
+		if (clientFallbackUrl) {
+			try {
+				const clientResponse = await fetch(
+					clientFallbackUrl,
+					clientFallbackOptions
+				);
+				if (!clientResponse.ok) {
+					throw new Error(
+						`${errorMessage}: Client-side fetch failed: ${clientResponse.statusText}`
+					);
+				}
+				const clientResult = await clientResponse.json();
+				return clientResult;
+			} catch (clientError: unknown) {
+				throw new Error(
+					`${errorMessage}: Failed to fetch data from both server and client: ${
+						clientError instanceof Error
+							? clientError.message
+							: "Unknown error"
+					}`
+				);
+			}
+		}
 		throw new Error(
-			errorData.error || `${errorMessage}: ${response.statusText}`
+			`${errorMessage}: Failed to fetch data from server: ${
+				serverError instanceof Error
+					? serverError.message
+					: "Unknown error"
+			}`
 		);
 	}
-	const result = await response.json();
-	return result;
 }
 
 export async function fetchLunoPrice(pair: string): Promise<MarketDetail> {
 	try {
+		const upperCasePair = pair.toUpperCase();
 		const data = await fetcher<LunoApiResponse>(
 			`/api/luno/${pair}`,
-			"Luno API error"
+			"Luno API error",
+			undefined,
+			`https://api.luno.com/api/1/ticker?pair=${upperCasePair}`,
+			undefined
 		);
 		if (data) {
 			return {
@@ -61,9 +100,13 @@ export async function fetchLunoPrice(pair: string): Promise<MarketDetail> {
 
 export async function fetchBinancePrice(symbol: string): Promise<MarketDetail> {
 	try {
+		const upperCaseSymbol = symbol.toUpperCase();
 		const data = await fetcher<BinanceApiResponse>(
 			`/api/binance/${symbol}`,
-			"Binance API error"
+			"Binance API error",
+			undefined,
+			`https://api.binance.com/api/v3/ticker/24hr?symbol=${upperCaseSymbol}`,
+			undefined
 		);
 		if (data) {
 			return {
@@ -84,9 +127,13 @@ export async function fetchBinancePrice(symbol: string): Promise<MarketDetail> {
 
 export async function fetchHuobiPrice(symbol: string): Promise<MarketDetail> {
 	try {
+		const lowerCaseSymbol = symbol.toLowerCase();
 		const data = await fetcher<HuobiApiResponse>(
 			`/api/huobi/${symbol}`,
-			"Huobi API error"
+			"Huobi API error",
+			undefined,
+			`https://api.huobi.pro/market/detail/merged?symbol=${lowerCaseSymbol}`,
+			undefined
 		);
 		if (data) {
 			return {
@@ -114,7 +161,10 @@ export async function fetchCoinGeckoPrice(): Promise<number> {
 	try {
 		const data = await fetcher<CoinGeckoApiResponse>(
 			"/api/coingecko/usdtmyr",
-			"CoinGecko API error"
+			"CoinGecko API error",
+			undefined,
+			"https://api.coingecko.com/api/v3/simple/price?ids=tether&vs_currencies=myr",
+			undefined
 		);
 		if (data && data.tether && data.tether.myr) {
 			setCache(COINGECKO_CACHE_KEY, data.tether.myr, CACHE_TTL);
@@ -149,7 +199,10 @@ export async function fetchCoinbasePrice(): Promise<number> {
 	try {
 		const data = await fetcher<CoinbaseApiResponse>(
 			"/api/coinbase/usdtmyr",
-			"Coinbase API error"
+			"Coinbase API error",
+			undefined,
+			"https://api.coinbase.com/v2/exchange-rates?currency=USDT",
+			undefined
 		);
 		console.log(data);
 		if (data && data.data && data.data.amount) {
@@ -179,9 +232,13 @@ export async function fetchCoinbasePrice(): Promise<number> {
 
 export async function fetchHataPrice(pair: string): Promise<MarketDetail> {
 	try {
+		const upperCasePair = pair.toUpperCase();
 		const data = await fetcher<HataApiResponse>(
 			`/api/hata/${pair}`,
-			"Hata API error"
+			"Hata API error",
+			undefined,
+			`https://api.hata.io/api/v1/public/exchangeInfo?pair=${upperCasePair}`,
+			undefined
 		);
 		if (data && data.exchangeInfo && data.orderBook) {
 			const bid = parseFloat(data.orderBook.bids[0]?.price || "0");
@@ -215,6 +272,12 @@ export async function fetchBnmPrice(): Promise<BnmExchangeRate> {
 		const data = await fetcher<BnmExchangeRate>(
 			"/api/bnm/usdmyr",
 			"BNM API error",
+			{
+				headers: {
+					Accept: "application/vnd.BNM.API.v1+json",
+				},
+			},
+			"https://api.bnm.gov.my/public/exchange-rate",
 			{
 				headers: {
 					Accept: "application/vnd.BNM.API.v1+json",
