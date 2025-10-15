@@ -204,7 +204,6 @@ export async function fetchCoinbasePrice(): Promise<number> {
 			"https://api.coinbase.com/v2/exchange-rates?currency=USDT",
 			undefined
 		);
-		console.log(data);
 		if (data && data.data && data.data.amount) {
 			const price = parseFloat(data.data.amount);
 			setCache(COINBASE_CACHE_KEY, price, CACHE_TTL);
