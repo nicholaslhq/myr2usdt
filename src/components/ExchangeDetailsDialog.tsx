@@ -68,6 +68,7 @@ export default function ExchangeDetailsDialog({
 					className="text-sm w-1/2"
 					size="icon"
 					disabled={!exchangeRateDetails}
+					aria-label="Exchange Details"
 				>
 					<Info className="h-4 w-4" />
 				</Button>

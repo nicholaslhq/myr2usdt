@@ -232,6 +232,7 @@ export default function Home() {
 						disabled={
 							loading || (!exchangeRateDetails && !hasError)
 						}
+						aria-label="Refresh exchange rate"
 					>
 						<RefreshCw
 							className={

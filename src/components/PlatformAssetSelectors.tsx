@@ -35,7 +35,11 @@ export default function PlatformAssetSelectors({
 					setSourcePlatform(value);
 				}}
 			>
-				<SelectTrigger id="source-platform" className="w-[120px]">
+				<SelectTrigger
+					id="source-platform"
+					aria-label="Select source platform"
+					className="w-[120px]"
+				>
 					<SelectValue placeholder="Source" />
 				</SelectTrigger>
 				<SelectContent>
@@ -55,7 +59,11 @@ export default function PlatformAssetSelectors({
 					setTargetPlatform(value);
 				}}
 			>
-				<SelectTrigger id="target-platform" className="w-[120px]">
+				<SelectTrigger
+					id="target-platform"
+					aria-label="Select target platform"
+					className="w-[120px]"
+				>
 					<SelectValue placeholder="Target" />
 				</SelectTrigger>
 				<SelectContent>
@@ -75,7 +83,11 @@ export default function PlatformAssetSelectors({
 					setCryptoAsset(value);
 				}}
 			>
-				<SelectTrigger id="crypto-asset" className="w-[100px]">
+				<SelectTrigger
+					id="crypto-asset"
+					aria-label="Select crypto asset"
+					className="w-[100px]"
+				>
 					<SelectValue placeholder="Asset" />
 				</SelectTrigger>
 				<SelectContent>
