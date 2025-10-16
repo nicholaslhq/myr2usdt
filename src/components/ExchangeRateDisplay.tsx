@@ -12,12 +12,14 @@ interface ExchangeRateDisplayProps {
 	exchangeRateDetails: ExchangeRateDetails | null;
 	loading: boolean;
 	hasError: boolean;
+	rateChangeAnimation: "green-pulse" | "red-pulse" | "";
 }
 
 export default function ExchangeRateDisplay({
 	exchangeRateDetails,
 	loading,
 	hasError,
+	rateChangeAnimation,
 }: ExchangeRateDisplayProps) {
 	return (
 		<>
@@ -26,23 +28,26 @@ export default function ExchangeRateDisplay({
 					<div className="text-center">
 						<Tooltip>
 							<TooltipTrigger asChild>
-								<NumberFlow
-									value={parseFloat(
-										exchangeRateDetails.rate.toFixed(4)
-									)}
-									format={{
-										notation: "standard",
-										maximumFractionDigits: 4,
-										minimumFractionDigits: 4,
-									}}
+								<div
 									className={`text-center text-8xl font-semibold ${
 										loading ? "opacity-50" : ""
 									} ${
 										hasError
 											? "text-red-600 opacity-50"
 											: ""
-									}`}
-								/>
+									} ${loading ? "" : rateChangeAnimation}`}
+								>
+									<NumberFlow
+										value={parseFloat(
+											exchangeRateDetails.rate.toFixed(4)
+										)}
+										format={{
+											notation: "standard",
+											maximumFractionDigits: 4,
+											minimumFractionDigits: 4,
+										}}
+									/>
+								</div>
 							</TooltipTrigger>
 							{hasError && (
 								<TooltipContent sideOffset={-30}>

@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
 	fetchLunoPrice,
 	fetchBinancePrice,
@@ -28,6 +28,12 @@ export default function Home() {
 	const [cryptoAsset, setCryptoAsset] = useState("xrp");
 	const [exchangeRateDetails, setExchangeRateDetails] =
 		useState<ExchangeRateDetails | null>(null);
+	const [previousExchangeRate, setPreviousExchangeRate] = useState<
+		number | null
+	>(null);
+	const [rateChangeAnimation, setRateChangeAnimation] = useState<
+		"green-pulse" | "red-pulse" | ""
+	>("");
 	const [loading, setLoading] = useState(false);
 	const [coinGeckoRate, setCoinGeckoRate] = useState<number | null>(null);
 	const [coinbaseRate, setCoinbaseRate] = useState<number | null>(null);
@@ -36,6 +42,12 @@ export default function Home() {
 	const [coinbaseDiff, setCoinbaseDiff] = useState<number | null>(null);
 	const [bnmDiff, setBnmDiff] = useState<number | null>(null);
 	const [hasError, setHasError] = useState(false);
+
+	const exchangeRateDetailsRef = useRef(exchangeRateDetails);
+
+	useEffect(() => {
+		exchangeRateDetailsRef.current = exchangeRateDetails;
+	}, [exchangeRateDetails]);
 
 	const calculateExchangeRate = useCallback(async () => {
 		setLoading(true);
@@ -69,6 +81,15 @@ export default function Home() {
 
 			if (sourceData.price && targetData.price) {
 				const rate = sourceData.price / targetData.price;
+
+				if (exchangeRateDetailsRef.current?.rate) {
+					setPreviousExchangeRate(
+						exchangeRateDetailsRef.current.rate
+					);
+				} else {
+					setPreviousExchangeRate(null);
+				}
+
 				setExchangeRateDetails({
 					rate,
 					source: {
@@ -118,6 +139,35 @@ export default function Home() {
 	}, [sourcePlatform, targetPlatform, cryptoAsset]);
 
 	useEffect(() => {
+		if (rateChangeAnimation) {
+			const timer = setTimeout(() => {
+				setRateChangeAnimation("");
+			}, 2000); // 2000ms matches the animation duration in globals.css
+			return () => clearTimeout(timer);
+		}
+	}, [rateChangeAnimation]);
+
+	useEffect(() => {
+		if (!loading && exchangeRateDetails && previousExchangeRate !== null) {
+			if (exchangeRateDetails.rate < previousExchangeRate) {
+				setRateChangeAnimation("green-pulse");
+			} else if (exchangeRateDetails.rate > previousExchangeRate) {
+				setRateChangeAnimation("red-pulse");
+			} else {
+				// If rates are the same, clear any existing animation
+				setRateChangeAnimation("");
+			}
+		} else if (
+			!loading &&
+			exchangeRateDetails &&
+			previousExchangeRate === null
+		) {
+			// If it's the initial load and there's no previous rate, don't animate
+			setRateChangeAnimation("");
+		}
+	}, [loading, exchangeRateDetails, previousExchangeRate]);
+
+	useEffect(() => {
 		// Auto-fetch and calculate rate on page load for the default pair
 		calculateExchangeRate();
 	}, [sourcePlatform, targetPlatform, cryptoAsset, calculateExchangeRate]); // Re-run when dropdowns change
@@ -149,6 +199,7 @@ export default function Home() {
 					exchangeRateDetails={exchangeRateDetails}
 					loading={loading}
 					hasError={hasError}
+					rateChangeAnimation={rateChangeAnimation}
 				/>
 
 				<ExternalRatesBadges

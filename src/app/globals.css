@@ -133,3 +133,35 @@
 .animate-spin-slow {
 	animation: spin 2s linear infinite;
 }
+
+@keyframes green-pulse {
+	0% {
+		color: inherit;
+	}
+	50% {
+		color: #16a34a; /* Tailwind's green-600 */
+	}
+	100% {
+		color: inherit;
+	}
+}
+
+@keyframes red-pulse {
+	0% {
+		color: inherit;
+	}
+	50% {
+		color: #dc2626; /* Tailwind's red-600 */
+	}
+	100% {
+		color: inherit;
+	}
+}
+
+.green-pulse {
+	animation: green-pulse 2s ease-in-out;
+}
+
+.red-pulse {
+	animation: red-pulse 2s ease-in-out;
+}
