@@ -95,6 +95,15 @@ export default function Home() {
 			} else {
 				throw new Error("Could not fetch prices for both platforms.");
 			}
+
+			// Fetch external rates concurrently
+			const [coingeckoPrice, coinbasePrice, bnmPrice] = await Promise.all(
+				[fetchCoinGeckoPrice(), fetchCoinbasePrice(), fetchBnmPrice()]
+			);
+
+			setCoinGeckoRate(coingeckoPrice);
+			setCoinbaseRate(coinbasePrice);
+			setBnmRate(bnmPrice);
 		} catch (err: unknown) {
 			setHasError(true); // Set error state to true
 			toast.error("Oops! Something went wrong", {
@@ -109,51 +118,6 @@ export default function Home() {
 	}, [sourcePlatform, targetPlatform, cryptoAsset]);
 
 	useEffect(() => {
-		const getCoinGeckoRate = async () => {
-			try {
-				const price = await fetchCoinGeckoPrice();
-				setCoinGeckoRate(price);
-			} catch (err: unknown) {
-				toast.error("Error fetching CoinGecko price", {
-					description:
-						err instanceof Error
-							? err.message
-							: "An unknown error occurred.",
-				});
-			}
-		};
-		getCoinGeckoRate();
-
-		const getCoinbaseRate = async () => {
-			try {
-				const price = await fetchCoinbasePrice();
-				setCoinbaseRate(price);
-			} catch (err: unknown) {
-				toast.error("Error fetching Coinbase price", {
-					description:
-						err instanceof Error
-							? err.message
-							: "An unknown error occurred.",
-				});
-			}
-		};
-		getCoinbaseRate();
-
-		const getBnmUsdMyrPrice = async () => {
-			try {
-				const rate = await fetchBnmPrice();
-				setBnmRate(rate);
-			} catch (err: unknown) {
-				toast.error("Error fetching BNM price", {
-					description:
-						err instanceof Error
-							? err.message
-							: "An unknown error occurred.",
-				});
-			}
-		};
-		getBnmUsdMyrPrice();
-
 		// Auto-fetch and calculate rate on page load for the default pair
 		calculateExchangeRate();
 	}, [sourcePlatform, targetPlatform, cryptoAsset, calculateExchangeRate]); // Re-run when dropdowns change
