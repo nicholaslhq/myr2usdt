@@ -54,7 +54,6 @@ export async function GET() {
 			);
 		}
 	} catch (error: unknown) {
-		console.error(`Error fetching BNM USD/MYR rate:`, error);
 		return NextResponse.json(
 			{
 				error: `Failed to fetch BNM USD/MYR rate: ${

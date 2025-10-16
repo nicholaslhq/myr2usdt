@@ -57,7 +57,6 @@ export async function fetcher<T>(
 		const result = await response.json();
 		return result;
 	} catch (serverError: unknown) {
-		console.warn(`Server-side fetch error for ${url}:`, serverError);
 		if (clientFallbackUrl) {
 			try {
 				const clientResponse = await fetch(
@@ -113,7 +112,6 @@ export async function fetchLunoPrice(pair: string): Promise<MarketDetail> {
 			throw new Error("Luno API returned unexpected data structure.");
 		}
 	} catch (error) {
-		console.error(`Error fetching Luno price for ${pair}:`, error);
 		throw error;
 	}
 }
@@ -140,7 +138,6 @@ export async function fetchBinancePrice(symbol: string): Promise<MarketDetail> {
 			throw new Error("Binance API returned unexpected data structure.");
 		}
 	} catch (error) {
-		console.error(`Error fetching Binance price for ${symbol}:`, error);
 		throw error;
 	}
 }
@@ -167,7 +164,6 @@ export async function fetchHuobiPrice(symbol: string): Promise<MarketDetail> {
 			throw new Error("Huobi API returned unexpected data structure.");
 		}
 	} catch (error) {
-		console.error(`Error fetching Huobi price for ${symbol}:`, error);
 		throw error;
 	}
 }
@@ -195,15 +191,11 @@ export async function fetchCoinGeckoPrice(): Promise<number> {
 			);
 		}
 	} catch (error: unknown) {
-		console.error("Error fetching CoinGecko USDT/MYR price:", error);
 		if (
 			error instanceof Error &&
 			error.message.includes("Too Many Requests") &&
 			cachedRate
 		) {
-			console.warn(
-				"Using cached CoinGecko price due to Too Many Requests error."
-			);
 			return cachedRate;
 		}
 		throw error;
@@ -234,15 +226,11 @@ export async function fetchCoinbasePrice(): Promise<number> {
 			);
 		}
 	} catch (error: unknown) {
-		console.error("Error fetching Coinbase USDT/MYR price:", error);
 		if (
 			error instanceof Error &&
 			error.message.includes("Too Many Requests") &&
 			cachedRate
 		) {
-			console.warn(
-				"Using cached Coinbase price due to Too Many Requests error."
-			);
 			return cachedRate;
 		}
 		throw error;
@@ -276,7 +264,6 @@ export async function fetchHataPrice(pair: string): Promise<MarketDetail> {
 			throw new Error("Hata API returned unexpected data structure.");
 		}
 	} catch (error) {
-		console.error(`Error fetching Hata price for ${pair}:`, error);
 		throw error;
 	}
 }
@@ -311,15 +298,11 @@ export async function fetchBnmPrice(): Promise<BnmExchangeRate> {
 			throw new Error("BNM API returned unexpected data structure.");
 		}
 	} catch (error: unknown) {
-		console.error("Error fetching BNM USD/MYR price:", error);
 		if (
 			error instanceof Error &&
 			error.message.includes("Too Many Requests") &&
 			cachedRate
 		) {
-			console.warn(
-				"Using cached BNM price due to Too Many Requests error."
-			);
 			return cachedRate;
 		}
 		throw error;

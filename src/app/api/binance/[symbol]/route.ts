@@ -46,10 +46,6 @@ export async function GET(
 			);
 		}
 	} catch (error: unknown) {
-		console.error(
-			`Error fetching Binance price for ${upperCaseSymbol}:`,
-			error
-		);
 		return NextResponse.json(
 			{
 				error: `Failed to fetch Binance price: ${
