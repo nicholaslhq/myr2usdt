@@ -8,12 +8,46 @@ import {
 	DialogFooter,
 	DialogClose,
 } from "@/components/ui/dialog";
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipProvider,
+	TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import { Info } from "lucide-react";
 import { ExchangeRateDetails } from "@/lib/api";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
+import Link from "next/link";
+
+const EXCHANGE_URLS: { [key: string]: string } = {
+	luno: "https://www.luno.com/trade/markets/",
+	hata: "https://hata.io/my/exchange", // No direct pair link
+	binance: "https://www.binance.com/en/trade/",
+	huobi: "https://www.htx.com/trade/",
+};
+
+function getExchangeUrl(platform: string, cryptoAsset: string): string | null {
+	const baseUrl = EXCHANGE_URLS[platform.toLowerCase()];
+	if (!baseUrl) {
+		return null;
+	}
+
+	switch (platform.toLowerCase()) {
+		case "luno":
+			return `${baseUrl}${cryptoAsset.toUpperCase()}MYR`;
+		case "binance":
+			return `${baseUrl}${cryptoAsset.toUpperCase()}_USDT?type=spot`;
+		case "huobi":
+			return `${baseUrl}${cryptoAsset.toLowerCase()}_usdt?type=spot`;
+		case "hata":
+			return baseUrl; // Hata has no direct pair link
+		default:
+			return null;
+	}
+}
 
 interface ExchangeDetailsDialogProps {
 	exchangeRateDetails: ExchangeRateDetails | null;
@@ -62,10 +96,50 @@ export default function ExchangeDetailsDialog({
 						<div className="grid grid-cols-2 gap-4">
 							<div className="col-span-2 text-lg font-semibold flex items-center gap-2">
 								Source
-								<Badge variant="secondary">
-									{exchangeRateDetails.source.platform}
-								</Badge>
-								<Badge variant="secondary">
+								<TooltipProvider>
+									<Tooltip>
+										<TooltipTrigger asChild>
+											<Link
+												href={
+													getExchangeUrl(
+														exchangeRateDetails
+															.source.platform,
+														cryptoAsset
+													) || "#"
+												}
+												target="_blank"
+												rel="noopener noreferrer"
+												className={`flex items-center ${
+													getExchangeUrl(
+														exchangeRateDetails
+															.source.platform,
+														cryptoAsset
+													)
+														? "cursor-pointer"
+														: "cursor-default"
+												}`}
+											>
+												<Badge variant="secondary">
+													{
+														exchangeRateDetails
+															.source.platform
+													}
+												</Badge>
+											</Link>
+										</TooltipTrigger>
+										<TooltipContent>
+											<p>
+												Visit{" "}
+												{
+													exchangeRateDetails.source
+														.platform
+												}{" "}
+												official website in new tab
+											</p>
+										</TooltipContent>
+									</Tooltip>
+								</TooltipProvider>
+								<Badge variant="outline">
 									{cryptoAsset.toUpperCase()}
 								</Badge>
 							</div>
@@ -125,10 +199,50 @@ export default function ExchangeDetailsDialog({
 						<div className="grid grid-cols-2 gap-4">
 							<div className="col-span-2 text-lg font-semibold flex items-center gap-2">
 								Target
-								<Badge variant="secondary">
-									{exchangeRateDetails.target.platform}
-								</Badge>
-								<Badge variant="secondary">
+								<TooltipProvider>
+									<Tooltip>
+										<TooltipTrigger asChild>
+											<Link
+												href={
+													getExchangeUrl(
+														exchangeRateDetails
+															.target.platform,
+														cryptoAsset
+													) || "#"
+												}
+												target="_blank"
+												rel="noopener noreferrer"
+												className={`flex items-center ${
+													getExchangeUrl(
+														exchangeRateDetails
+															.target.platform,
+														cryptoAsset
+													)
+														? "cursor-pointer"
+														: "cursor-default"
+												}`}
+											>
+												<Badge variant="secondary">
+													{
+														exchangeRateDetails
+															.target.platform
+													}
+												</Badge>
+											</Link>
+										</TooltipTrigger>
+										<TooltipContent>
+											<p>
+												Visit{" "}
+												{
+													exchangeRateDetails.target
+														.platform
+												}{" "}
+												official website in new tab
+											</p>
+										</TooltipContent>
+									</Tooltip>
+								</TooltipProvider>
+								<Badge variant="outline">
 									{cryptoAsset.toUpperCase()}
 								</Badge>
 							</div>
