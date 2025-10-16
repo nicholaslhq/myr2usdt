@@ -20,6 +20,26 @@ export interface MarketDetail {
 	volume: number;
 }
 
+export interface ExchangeRateDetails {
+	rate: number;
+	source: {
+		platform: string;
+		price: number;
+		timestamp: number;
+		bid?: number;
+		ask?: number;
+		volume?: number;
+	};
+	target: {
+		platform: string;
+		price: number;
+		timestamp: number;
+		bid?: number;
+		ask?: number;
+		volume?: number;
+	};
+}
+
 export async function fetcher<T>(
 	url: string,
 	errorMessage: string,
