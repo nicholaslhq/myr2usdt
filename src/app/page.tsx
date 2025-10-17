@@ -191,7 +191,7 @@ export default function Home() {
 	}, [exchangeRateDetails, coinGeckoRate, coinbaseRate, bnmRate]);
 
 	return (
-		<div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
+		<div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4">
 			<Card className="w-full max-w-md">
 				<AppHeader />
 
