@@ -96,6 +96,9 @@ export default function PlatformAssetSelectors({
 						<SelectItem value="xrp">XRP</SelectItem>
 						<SelectItem value="btc">BTC</SelectItem>
 						<SelectItem value="eth">ETH</SelectItem>
+						<SelectItem value="sol">SOL</SelectItem>
+						<SelectItem value="xlm">XLM</SelectItem>
+						<SelectItem value="ltc">LTC</SelectItem>
 					</SelectGroup>
 				</SelectContent>
 			</Select>
