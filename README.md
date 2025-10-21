@@ -16,8 +16,9 @@ The developer of this project hold no responsibility for the accuracy, completen
 
 -   **Dynamic Price Updates**: Automatically fetches and updates exchange rates, providing the latest market information.
 -   **Rate Change Visualization**: Visual cues (green/red pulse animations) to highlight upward or downward movements in exchange rates.
+-   **Historical Exchange Rate Chart**: Visualize historical exchange rate trends with an interactive chart.
 -   **External Rate Comparison**: Displays percentage differences between the calculated exchange rate and external reference rates from CoinGecko, Coinbase, and BNM.
--   **Detailed Market Information**: Access comprehensive details for each platform, including bid/ask prices, 24-hour volume, and timestamp of the last update.
+-   **Detailed Market Information**: Access comprehensive details for each platform, including bid/ask prices, 24-hour volume, timestamp of the last update, and direct links to the exchange platforms.
 -   **User-Friendly Interface**: Intuitive dropdowns for selecting source platform, target platform, and crypto asset.
 
 ## 🛠️ Technology Stack
@@ -33,6 +34,9 @@ This project is built with a modern web development stack, leveraging the follow
     -   [Shadcn UI](https://ui.shadcn.com/) - Re-usable components built using Radix UI and Tailwind CSS.
     -   [Radix UI](https://www.radix-ui.com/) - Low-level UI components for building accessible design systems.
 -   **Icons**: [Lucide React](https://lucide.dev/) (v0.545.0) - A collection of beautiful and customizable SVG icons.
+-   **Charting**:
+    -   [Chart.js](https://www.chartjs.org/) (v4.5.1) - Flexible JavaScript charting for designers and developers.
+    -   [React Chart.js 2](https://react-chartjs-2.js.org/) (v5.3.0) - React wrapper for Chart.js.
 -   **State Management/Utilities**:
     -   `@number-flow/react` (v0.5.10)
     -   `class-variance-authority` (v0.7.1)
