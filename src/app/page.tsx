@@ -206,17 +206,12 @@ export default function Home() {
 		// Auto-fetch and calculate rate on page load for the default pair
 		calculateExchangeRate();
 
-		// First refresh after 5 seconds
-		const initialRefreshTimeout = setTimeout(() => {
+		// Refreshes every 60 seconds
+		const refreshInterval = setInterval(() => {
 			calculateExchangeRate();
-			// Subsequent refreshes every 60 seconds
-			const refreshInterval = setInterval(() => {
-				calculateExchangeRate();
-			}, 60000); // Refresh every 60 seconds
-			return () => clearInterval(refreshInterval); // Cleanup for subsequent interval
-		}, 5000); // Initial refresh after 5 seconds
+		}, 60000); // Refresh every 60 seconds
 
-		return () => clearTimeout(initialRefreshTimeout); // Cleanup for initial timeout
+		return () => clearInterval(refreshInterval); // Cleanup for interval
 	}, [sourcePlatform, targetPlatform, cryptoAsset, calculateExchangeRate]); // Re-run when dropdowns change
 
 	useEffect(() => {
