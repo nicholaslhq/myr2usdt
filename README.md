@@ -4,6 +4,8 @@ This project provides a real-time comparison of cryptocurrency exchange rates be
 
 <img width="1366" height="806" alt="image" src="https://github.com/user-attachments/assets/ba01497e-df00-420b-acb3-c865f825f840" />
 
+<img width="1388" height="844" alt="image" src="https://github.com/user-attachments/assets/8ad3b316-8759-45d7-8fae-ecf7e80984eb" />
+
 ## ⚠️ Disclaimer
 
 This application is provided for **informational purposes only** and should not be considered financial, investment, or trading advice. The accuracy and real-time nature of the displayed exchange rates are entirely dependent on the reliability and availability of the external API sources (e.g., Luno, Binance, CoinGecko, BNM). Cryptocurrency markets are highly volatile, and actual transaction prices may vary significantly due to market fluctuations, liquidity, network congestion, exchange fees, and other unforeseen factors.
