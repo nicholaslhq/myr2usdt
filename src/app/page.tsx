@@ -117,14 +117,27 @@ export default function Home() {
 				throw new Error("Could not fetch prices for both platforms.");
 			}
 
-			// Fetch external rates concurrently
-			const [coingeckoPrice, coinbasePrice, bnmPrice] = await Promise.all(
-				[fetchCoinGeckoPrice(), fetchCoinbasePrice(), fetchBnmPrice()]
-			);
+			// Fetch external rates concurrently using Promise.allSettled to handle individual errors
+			const [coingeckoResult, coinbaseResult, bnmResult] =
+				await Promise.allSettled([
+					fetchCoinGeckoPrice(),
+					fetchCoinbasePrice(),
+					fetchBnmPrice(),
+				]);
 
-			setCoinGeckoRate(coingeckoPrice);
-			setCoinbaseRate(coinbasePrice);
-			setBnmRate(bnmPrice);
+			setCoinGeckoRate(
+				coingeckoResult.status === "fulfilled"
+					? coingeckoResult.value
+					: null
+			);
+			setCoinbaseRate(
+				coinbaseResult.status === "fulfilled"
+					? coinbaseResult.value
+					: null
+			);
+			setBnmRate(
+				bnmResult.status === "fulfilled" ? bnmResult.value : null
+			);
 		} catch (err: unknown) {
 			setHasError(true); // Set error state to true
 			toast.error("Oops! Something went wrong", {
@@ -209,6 +222,7 @@ export default function Home() {
 					coinbaseDiff={coinbaseDiff}
 					bnmRate={bnmRate}
 					bnmDiff={bnmDiff}
+					loading={loading}
 				/>
 
 				<PlatformAssetSelectors

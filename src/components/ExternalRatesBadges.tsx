@@ -16,6 +16,7 @@ interface ExternalRatesBadgesProps {
 	coinbaseDiff: number | null;
 	bnmRate: BnmExchangeRate | null;
 	bnmDiff: number | null;
+	loading: boolean;
 }
 
 export default function ExternalRatesBadges({
@@ -25,6 +26,7 @@ export default function ExternalRatesBadges({
 	coinbaseDiff,
 	bnmRate,
 	bnmDiff,
+	loading,
 }: ExternalRatesBadgesProps) {
 	return (
 		<CardContent className="mt-4 flex flex-wrap justify-center gap-2">
@@ -65,9 +67,9 @@ export default function ExternalRatesBadges({
 						<p>CoinGecko USDT/MYR price</p>
 					</TooltipContent>
 				</Tooltip>
-			) : (
+			) : loading ? (
 				<Skeleton className="h-8 w-24" />
-			)}
+			) : null}
 			{coinbaseRate ? (
 				<Tooltip>
 					<TooltipTrigger asChild>
@@ -105,9 +107,9 @@ export default function ExternalRatesBadges({
 						<p>Coinbase USDT/MYR price</p>
 					</TooltipContent>
 				</Tooltip>
-			) : (
+			) : loading ? (
 				<Skeleton className="h-8 w-24" />
-			)}
+			) : null}
 			{bnmRate?.rate.middle_rate ? (
 				<Tooltip>
 					<TooltipTrigger asChild>
@@ -145,9 +147,9 @@ export default function ExternalRatesBadges({
 						<p>Bank Negara Malaysia USD/MYR middle rate</p>
 					</TooltipContent>
 				</Tooltip>
-			) : (
+			) : loading ? (
 				<Skeleton className="h-8 w-24" />
-			)}
+			) : null}
 		</CardContent>
 	);
 }
