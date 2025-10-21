@@ -64,16 +64,31 @@ export default function ExchangeRateChart({
 			tooltip: {
 				callbacks: {
 					label: function (context: TooltipItem<"line">) {
-						let label = context.dataset.label || "";
-						if (label) {
-							label += ": ";
+						const historicalRate =
+							historicalRates[context.dataIndex];
+						if (
+							!historicalRate ||
+							historicalRate.rate === undefined ||
+							historicalRate.rate === null
+						) {
+							return "N/A"; // Return a default label if historicalRate or its rate is undefined/null
 						}
-						if (context.parsed.y !== null) {
-							label += parseFloat(
-								context.parsed.y.toString()
-							).toFixed(4);
+						const labels: string[] = [];
+						labels.push(`Rate: ${historicalRate.rate.toFixed(4)}`);
+						if (historicalRate.sourcePlatform) {
+							labels.push(
+								`Source: ${historicalRate.sourcePlatform}`
+							);
 						}
-						return label;
+						if (historicalRate.targetPlatform) {
+							labels.push(
+								`Target: ${historicalRate.targetPlatform}`
+							);
+						}
+						if (historicalRate.cryptoAsset) {
+							labels.push(`Asset: ${historicalRate.cryptoAsset}`);
+						}
+						return labels;
 					},
 				},
 				backgroundColor: "rgba(0, 0, 0, 0.7)", // Darker tooltip background

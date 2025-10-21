@@ -43,6 +43,9 @@ export interface ExchangeRateDetails {
 export interface HistoricalRate {
 	rate: number;
 	timestamp: number;
+	sourcePlatform?: string;
+	targetPlatform?: string;
+	cryptoAsset?: string;
 }
 
 export async function fetcher<T>(

@@ -123,7 +123,17 @@ export default function Home() {
 				// Store historical rate
 				setHistoricalRates((prevRates) => [
 					...prevRates,
-					{ rate, timestamp: Date.now() },
+					{
+						rate,
+						timestamp: Date.now(),
+						sourcePlatform:
+							sourcePlatform.charAt(0).toUpperCase() +
+							sourcePlatform.slice(1),
+						targetPlatform:
+							targetPlatform.charAt(0).toUpperCase() +
+							targetPlatform.slice(1),
+						cryptoAsset: cryptoAsset.toUpperCase(),
+					},
 				]);
 			} else {
 				throw new Error("Could not fetch prices for both platforms.");
