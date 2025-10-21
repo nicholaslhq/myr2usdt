@@ -10,6 +10,7 @@ import {
 	fetchBnmPrice,
 	MarketDetail,
 	ExchangeRateDetails,
+	HistoricalRate,
 } from "../lib/api";
 import { BnmExchangeRate } from "../app/api/bnm/usdmyr/route";
 import { Card, CardFooter } from "../components/ui/card";
@@ -20,7 +21,8 @@ import ExchangeRateDisplay from "@/components/ExchangeRateDisplay";
 import ExternalRatesBadges from "@/components/ExternalRatesBadges";
 import PlatformAssetSelectors from "@/components/PlatformAssetSelectors";
 import ExchangeDetailsDialog from "@/components/ExchangeDetailsDialog";
-import { RefreshCw } from "lucide-react";
+import ExchangeRateChart from "@/components/ExchangeRateChart";
+import { RefreshCw, ChartSpline } from "lucide-react";
 
 export default function Home() {
 	const [sourcePlatform, setSourcePlatform] = useState("luno");
@@ -42,6 +44,10 @@ export default function Home() {
 	const [coinbaseDiff, setCoinbaseDiff] = useState<number | null>(null);
 	const [bnmDiff, setBnmDiff] = useState<number | null>(null);
 	const [hasError, setHasError] = useState(false);
+	const [historicalRates, setHistoricalRates] = useState<HistoricalRate[]>(
+		[]
+	);
+	const [showChart, setShowChart] = useState(true); // New state for chart visibility
 
 	const exchangeRateDetailsRef = useRef(exchangeRateDetails);
 
@@ -113,6 +119,12 @@ export default function Home() {
 						volume: targetData.volume,
 					},
 				});
+
+				// Store historical rate
+				setHistoricalRates((prevRates) => [
+					...prevRates,
+					{ rate, timestamp: Date.now() },
+				]);
 			} else {
 				throw new Error("Could not fetch prices for both platforms.");
 			}
@@ -215,6 +227,12 @@ export default function Home() {
 					rateChangeAnimation={rateChangeAnimation}
 				/>
 
+				{showChart && (
+					<div className="transition-all duration-500 ease-in-out overflow-hidden">
+						<ExchangeRateChart historicalRates={historicalRates} />
+					</div>
+				)}
+
 				<ExternalRatesBadges
 					coinGeckoRate={coinGeckoRate}
 					coinGeckoDiff={coinGeckoDiff}
@@ -241,8 +259,16 @@ export default function Home() {
 						cryptoAsset={cryptoAsset}
 					/>
 					<Button
+						onClick={() => setShowChart(!showChart)}
+						className="w-1/3"
+						variant="outline"
+						aria-label="Toggle chart visibility"
+					>
+						<ChartSpline className="h-4 w-4" />
+					</Button>
+					<Button
 						onClick={calculateExchangeRate}
-						className="w-1/2"
+						className="w-1/3"
 						disabled={
 							loading || (!exchangeRateDetails && !hasError)
 						}

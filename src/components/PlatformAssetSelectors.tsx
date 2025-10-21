@@ -28,7 +28,7 @@ export default function PlatformAssetSelectors({
 	setCryptoAsset,
 }: PlatformAssetSelectorsProps) {
 	return (
-		<CardContent className="flex items-center justify-center space-x-2">
+		<CardContent className="flex items-center justify-center gap-2">
 			<Select
 				value={sourcePlatform}
 				onValueChange={(value) => {
@@ -38,7 +38,7 @@ export default function PlatformAssetSelectors({
 				<SelectTrigger
 					id="source-platform"
 					aria-label="Select source platform"
-					className="w-[120px]"
+					className="flex-1"
 				>
 					<SelectValue placeholder="Source" />
 				</SelectTrigger>
@@ -62,7 +62,7 @@ export default function PlatformAssetSelectors({
 				<SelectTrigger
 					id="target-platform"
 					aria-label="Select target platform"
-					className="w-[120px]"
+					className="flex-1"
 				>
 					<SelectValue placeholder="Target" />
 				</SelectTrigger>
@@ -86,7 +86,7 @@ export default function PlatformAssetSelectors({
 				<SelectTrigger
 					id="crypto-asset"
 					aria-label="Select crypto asset"
-					className="w-[100px]"
+					className="flex-1"
 				>
 					<SelectValue placeholder="Asset" />
 				</SelectTrigger>

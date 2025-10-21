@@ -65,7 +65,7 @@ export default function ExchangeDetailsDialog({
 			<DialogTrigger asChild>
 				<Button
 					variant="outline"
-					className="text-sm w-1/2"
+					className="text-sm w-1/3"
 					size="icon"
 					disabled={!exchangeRateDetails}
 					aria-label="Exchange Details"

@@ -40,6 +40,11 @@ export interface ExchangeRateDetails {
 	};
 }
 
+export interface HistoricalRate {
+	rate: number;
+	timestamp: number;
+}
+
 export async function fetcher<T>(
 	url: string,
 	errorMessage: string,
