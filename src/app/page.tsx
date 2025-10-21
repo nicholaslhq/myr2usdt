@@ -47,7 +47,7 @@ export default function Home() {
 	const [historicalRates, setHistoricalRates] = useState<HistoricalRate[]>(
 		[]
 	);
-	const [showChart, setShowChart] = useState(true); // New state for chart visibility
+	const [showChart, setShowChart] = useState(false);
 
 	const exchangeRateDetailsRef = useRef(exchangeRateDetails);
 
@@ -195,6 +195,18 @@ export default function Home() {
 	useEffect(() => {
 		// Auto-fetch and calculate rate on page load for the default pair
 		calculateExchangeRate();
+
+		// First refresh after 5 seconds
+		const initialRefreshTimeout = setTimeout(() => {
+			calculateExchangeRate();
+			// Subsequent refreshes every 60 seconds
+			const refreshInterval = setInterval(() => {
+				calculateExchangeRate();
+			}, 60000); // Refresh every 60 seconds
+			return () => clearInterval(refreshInterval); // Cleanup for subsequent interval
+		}, 5000); // Initial refresh after 5 seconds
+
+		return () => clearTimeout(initialRefreshTimeout); // Cleanup for initial timeout
 	}, [sourcePlatform, targetPlatform, cryptoAsset, calculateExchangeRate]); // Re-run when dropdowns change
 
 	useEffect(() => {
@@ -259,14 +271,16 @@ export default function Home() {
 						cryptoAsset={cryptoAsset}
 						className="flex-1"
 					/>
-					<Button
-						onClick={() => setShowChart(!showChart)}
-						className="flex-1"
-						variant="outline"
-						aria-label="Toggle chart visibility"
-					>
-						<ChartSpline className="h-4 w-4" />
-					</Button>
+					{historicalRates.length > 1 && (
+						<Button
+							onClick={() => setShowChart(!showChart)}
+							className="flex-1"
+							variant={showChart ? "secondary" : "outline"}
+							aria-label="Toggle chart visibility"
+						>
+							<ChartSpline className="h-4 w-4" />
+						</Button>
+					)}
 					<Button
 						onClick={calculateExchangeRate}
 						className="flex-1"
