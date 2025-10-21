@@ -53,20 +53,21 @@ interface ExchangeDetailsDialogProps {
 	exchangeRateDetails: ExchangeRateDetails | null;
 	loading: boolean;
 	cryptoAsset: string;
+	className?: string; // Add className to props
 }
 
 export default function ExchangeDetailsDialog({
 	exchangeRateDetails,
 	loading,
 	cryptoAsset,
+	className,
 }: ExchangeDetailsDialogProps) {
 	return (
 		<Dialog>
 			<DialogTrigger asChild>
 				<Button
 					variant="outline"
-					className="text-sm w-1/3"
-					size="icon"
+					className={className}
 					disabled={!exchangeRateDetails}
 					aria-label="Exchange Details"
 				>

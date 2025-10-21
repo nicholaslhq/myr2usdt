@@ -252,15 +252,16 @@ export default function Home() {
 					setCryptoAsset={setCryptoAsset}
 				/>
 
-				<CardFooter className="flex justify-center items-center gap-2">
+				<CardFooter className="flex w-full items-center gap-2">
 					<ExchangeDetailsDialog
 						exchangeRateDetails={exchangeRateDetails}
 						loading={loading}
 						cryptoAsset={cryptoAsset}
+						className="flex-1"
 					/>
 					<Button
 						onClick={() => setShowChart(!showChart)}
-						className="w-1/3"
+						className="flex-1"
 						variant="outline"
 						aria-label="Toggle chart visibility"
 					>
@@ -268,7 +269,7 @@ export default function Home() {
 					</Button>
 					<Button
 						onClick={calculateExchangeRate}
-						className="w-1/3"
+						className="flex-1"
 						disabled={
 							loading || (!exchangeRateDetails && !hasError)
 						}
