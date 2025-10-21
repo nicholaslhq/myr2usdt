@@ -220,6 +220,16 @@ export async function fetchCoinbasePrice(): Promise<number> {
 			const price = parseFloat(data.data.amount);
 			setCache(COINBASE_CACHE_KEY, price, CACHE_TTL);
 			return price;
+		} else if (
+			data &&
+			data.data &&
+			data.data.rates &&
+			data.data.rates.MYR
+		) {
+			// Fallback to rates object if amount is not present
+			const price = parseFloat(data.data.rates.MYR);
+			setCache(COINBASE_CACHE_KEY, price, CACHE_TTL);
+			return price;
 		} else {
 			throw new Error(
 				"Coinbase API returned unexpected data structure for USDT/MYR."

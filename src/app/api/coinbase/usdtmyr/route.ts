@@ -3,9 +3,12 @@ import { fetcher } from "@/lib/api";
 
 export interface CoinbaseApiResponse {
 	data: {
-		amount: string;
-		base: string;
+		amount?: string;
+		base?: string;
 		currency: string;
+		rates?: {
+			[key: string]: string;
+		};
 	};
 }
 
