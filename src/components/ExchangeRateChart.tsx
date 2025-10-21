@@ -86,7 +86,9 @@ export default function ExchangeRateChart({
 							);
 						}
 						if (historicalRate.cryptoAsset) {
-							labels.push(`Asset: ${historicalRate.cryptoAsset}`);
+							labels.push(
+								`Crypto: ${historicalRate.cryptoAsset}`
+							);
 						}
 						return labels;
 					},
