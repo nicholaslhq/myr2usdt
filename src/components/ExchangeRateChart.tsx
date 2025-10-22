@@ -30,11 +30,15 @@ ChartJS.register(
 
 interface ExchangeRateChartProps {
 	historicalRates: HistoricalRate[];
+	pointThreshold?: number; // Optional threshold to hide points
 }
 
 export default function ExchangeRateChart({
 	historicalRates,
+	pointThreshold = 20, // Default threshold to hide points
 }: ExchangeRateChartProps) {
+	const hidePoints = historicalRates.length > pointThreshold;
+
 	const data: ChartData<"line"> = {
 		labels: historicalRates.map((rate) =>
 			new Date(rate.timestamp).toLocaleTimeString()
@@ -48,6 +52,8 @@ export default function ExchangeRateChart({
 				borderWidth: 2,
 				tension: 0.4,
 				cubicInterpolationMode: "monotone",
+				pointRadius: hidePoints ? 0 : 3, // Hide points if count exceeds threshold
+				pointHoverRadius: hidePoints ? 0 : 5, // Hide hover points if count exceeds threshold
 			},
 		],
 	};
@@ -62,6 +68,7 @@ export default function ExchangeRateChart({
 				position: "top" as const,
 			},
 			tooltip: {
+				enabled: !hidePoints, // Disable tooltip if points are hidden
 				callbacks: {
 					label: function (context: TooltipItem<"line">) {
 						const historicalRate =
@@ -127,7 +134,8 @@ export default function ExchangeRateChart({
 					display: false,
 				},
 				ticks: {
-					display: false,
+					display: true,
+					maxTicksLimit: 5,
 				},
 				border: {
 					display: false,
