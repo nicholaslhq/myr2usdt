@@ -13,6 +13,7 @@ import {
 	HistoricalRate,
 } from "../lib/api";
 import { BnmExchangeRate } from "../app/api/bnm/usdmyr/route";
+import { downsampleHistoricalRates } from "../lib/utils";
 import { Card, CardFooter } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { toast } from "sonner";
@@ -120,21 +121,24 @@ export default function Home() {
 					},
 				});
 
-				// Store historical rate
-				setHistoricalRates((prevRates) => [
-					...prevRates,
-					{
-						rate,
-						timestamp: Date.now(),
-						sourcePlatform:
-							sourcePlatform.charAt(0).toUpperCase() +
-							sourcePlatform.slice(1),
-						targetPlatform:
-							targetPlatform.charAt(0).toUpperCase() +
-							targetPlatform.slice(1),
-						cryptoAsset: cryptoAsset.toUpperCase(),
-					},
-				]);
+				// Store historical rate and downsample
+				setHistoricalRates((prevRates) => {
+					const updatedRates = [
+						...prevRates,
+						{
+							rate,
+							timestamp: Date.now(),
+							sourcePlatform:
+								sourcePlatform.charAt(0).toUpperCase() +
+								sourcePlatform.slice(1),
+							targetPlatform:
+								targetPlatform.charAt(0).toUpperCase() +
+								targetPlatform.slice(1),
+							cryptoAsset: cryptoAsset.toUpperCase(),
+						},
+					];
+					return downsampleHistoricalRates(updatedRates, Date.now());
+				});
 			} else {
 				throw new Error("Could not fetch prices for both platforms.");
 			}
