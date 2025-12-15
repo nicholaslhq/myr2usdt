@@ -308,6 +308,17 @@ export default function Home() {
 					</Button>
 				</CardFooter>
 			</Card>
+			<footer className="mt-6 text-center text-sm text-gray-500">
+				Created by{" "}
+				<a
+					href="https://nlhq.vercel.app/"
+					target="_blank"
+					rel="noopener noreferrer"
+					className="underline hover:text-primary transition-colors"
+				>
+					Nicholas
+				</a>
+			</footer>
 		</div>
 	);
 }
