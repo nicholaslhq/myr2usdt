@@ -7,6 +7,8 @@ export interface CoinGeckoApiResponse {
 	};
 }
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
 	try {
 		const data = await fetcher<CoinGeckoApiResponse>(

@@ -19,6 +19,8 @@ export interface HataApiResponse {
 	orderBook: HataOrderBookData | undefined;
 }
 
+export const dynamic = "force-dynamic";
+
 export async function GET(
 	request: Request,
 	{ params }: { params: Promise<{ pair: string }> }
@@ -27,28 +29,41 @@ export async function GET(
 	const upperCasePair = pair.toUpperCase();
 
 	try {
-		// Fetch exchange info
-		const exchangeInfoResponse = await fetcher<{
-			data: HataExchangeInfoData[];
-		}>(
-			`https://my-api.hata.io/orderbook/api/v2/exchange-info`,
-			"Hata Exchange Info API error"
-		);
+		// Fetch exchange info and order book concurrently
+		const [exchangeInfoResponse, orderBookResponse] = await Promise.all([
+			fetcher<{
+				data: HataExchangeInfoData[];
+			}>(
+				"https://my-api.hata.io/orderbook/api/v2/exchange-info",
+				"Hata Exchange Info API error"
+			),
+			fetcher<{ data: HataOrderBookData }>(
+				`https://my-api.hata.io/orderbook/api/orderbook?pair_name=${upperCasePair}`,
+				"Hata Order Book API error"
+			),
+		]);
 
 		const exchangeInfo = exchangeInfoResponse.data.find(
 			(item) => item.txpair === upperCasePair
 		);
 
-		// Fetch order book
-		const orderBookResponse = await fetcher<{ data: HataOrderBookData }>(
-			`https://my-api.hata.io/orderbook/api/orderbook?pair_name=${upperCasePair}`,
-			"Hata Order Book API error"
-		);
-
 		const orderBook = orderBookResponse.data;
 
 		if (exchangeInfo || orderBook) {
-			return NextResponse.json({ exchangeInfo, orderBook });
+			const filteredPair = exchangeInfo
+				? {
+						base: exchangeInfo.base,
+						quote: exchangeInfo.quote,
+						txpair: exchangeInfo.txpair,
+						price: exchangeInfo.price,
+						quote_volume: exchangeInfo.quote_volume,
+					}
+				: undefined;
+
+			return NextResponse.json({
+				exchangeInfo: filteredPair,
+				orderBook,
+			});
 		} else {
 			return NextResponse.json(
 				{

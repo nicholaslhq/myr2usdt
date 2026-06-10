@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BnmExchangeRate } from "@/app/api/bnm/usdmyr/route";
+import React, { memo } from "react";
 
 interface ExternalRatesBadgesProps {
 	coinGeckoRate: number | null;
@@ -19,7 +20,11 @@ interface ExternalRatesBadgesProps {
 	loading: boolean;
 }
 
-export default function ExternalRatesBadges({
+// Pre-lookup frequently used values to avoid repeated optional chaining
+const formatRate = (val: number) => val.toFixed(4);
+const formatDiff = (val: number) => val.toFixed(2);
+
+const ExternalRatesBadges = memo(function ExternalRatesBadges({
 	coinGeckoRate,
 	coinGeckoDiff,
 	coinbaseRate,
@@ -28,6 +33,8 @@ export default function ExternalRatesBadges({
 	bnmDiff,
 	loading,
 }: ExternalRatesBadgesProps) {
+	const bnmMiddleRate = bnmRate?.rate.middle_rate;
+
 	return (
 		<CardContent className="mt-4 flex flex-wrap justify-center gap-2">
 			{coinGeckoRate ? (
@@ -47,7 +54,7 @@ export default function ExternalRatesBadges({
 									<AvatarFallback>CG</AvatarFallback>
 								</Avatar>
 								<span className="text-sm font-medium">
-									{coinGeckoRate.toFixed(4)}
+									{formatRate(coinGeckoRate)}
 								</span>
 								{coinGeckoDiff !== null && (
 									<span
@@ -57,7 +64,7 @@ export default function ExternalRatesBadges({
 												: "text-red-500"
 										}`}
 									>
-										({coinGeckoDiff.toFixed(2)}%)
+										({formatDiff(coinGeckoDiff)}%)
 									</span>
 								)}
 							</Badge>
@@ -87,7 +94,7 @@ export default function ExternalRatesBadges({
 									<AvatarFallback>CB</AvatarFallback>
 								</Avatar>
 								<span className="text-sm font-medium">
-									{coinbaseRate.toFixed(4)}
+									{formatRate(coinbaseRate)}
 								</span>
 								{coinbaseDiff !== null && (
 									<span
@@ -97,7 +104,7 @@ export default function ExternalRatesBadges({
 												: "text-red-500"
 										}`}
 									>
-										({coinbaseDiff.toFixed(2)}%)
+										({formatDiff(coinbaseDiff)}%)
 									</span>
 								)}
 							</Badge>
@@ -110,7 +117,7 @@ export default function ExternalRatesBadges({
 			) : loading ? (
 				<Skeleton className="h-8 w-24" />
 			) : null}
-			{bnmRate?.rate.middle_rate ? (
+			{bnmMiddleRate !== null && bnmMiddleRate !== undefined ? (
 				<Tooltip>
 					<TooltipTrigger asChild>
 						<a
@@ -127,7 +134,7 @@ export default function ExternalRatesBadges({
 									<AvatarFallback>BNM</AvatarFallback>
 								</Avatar>
 								<span className="text-sm font-medium">
-									{bnmRate.rate.middle_rate.toFixed(4)}
+									{formatRate(bnmMiddleRate)}
 								</span>
 								{bnmDiff !== null && (
 									<span
@@ -137,7 +144,7 @@ export default function ExternalRatesBadges({
 												: "text-red-500"
 										}`}
 									>
-										({bnmDiff.toFixed(2)}%)
+										({formatDiff(bnmDiff)}%)
 									</span>
 								)}
 							</Badge>
@@ -152,4 +159,6 @@ export default function ExternalRatesBadges({
 			) : null}
 		</CardContent>
 	);
-}
+});
+
+export default ExternalRatesBadges;

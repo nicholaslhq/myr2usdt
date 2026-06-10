@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import {
 	fetchLunoPrice,
 	fetchBinancePrice,
@@ -22,8 +22,20 @@ import ExchangeRateDisplay from "@/components/ExchangeRateDisplay";
 import ExternalRatesBadges from "@/components/ExternalRatesBadges";
 import PlatformAssetSelectors from "@/components/PlatformAssetSelectors";
 import ExchangeDetailsDialog from "@/components/ExchangeDetailsDialog";
-import ExchangeRateChart from "@/components/ExchangeRateChart";
+import dynamic from "next/dynamic";
+import { Skeleton } from "@/components/ui/skeleton";
+
+const ExchangeRateChart = dynamic(
+	() => import("@/components/ExchangeRateChart"),
+	{
+		loading: () => <Skeleton className="h-64 w-full" />,
+		ssr: false,
+	}
+);
 import { RefreshCw, ChartSpline } from "lucide-react";
+
+const AUTO_REFRESH_INTERVAL = 60_000;
+const ANIMATION_DURATION = 2000;
 
 export default function Home() {
 	const [sourcePlatform, setSourcePlatform] = useState("luno");
@@ -51,58 +63,59 @@ export default function Home() {
 	const [showChart, setShowChart] = useState(false);
 
 	const exchangeRateDetailsRef = useRef(exchangeRateDetails);
+	const prevRateRef = useRef<number | null>(null);
 
 	useEffect(() => {
 		exchangeRateDetailsRef.current = exchangeRateDetails;
-	}, [exchangeRateDetails]);
+		prevRateRef.current = previousExchangeRate;
+	}, [exchangeRateDetails, previousExchangeRate]);
 
 	const calculateExchangeRate = useCallback(async () => {
 		setLoading(true);
-		setHasError(false); // Reset error state at the beginning of a new calculation
+		setHasError(false);
 
 		try {
 			let sourceData: MarketDetail;
 			let targetData: MarketDetail;
 
-			// Fetch price from source platform (Luno/Hata - MYR)
+			// Fetch source platform price
 			if (sourcePlatform === "luno") {
-				const lunoPair = `${cryptoAsset.toUpperCase()}MYR`;
-				sourceData = await fetchLunoPrice(lunoPair);
-			} else if (sourcePlatform === "hata") {
-				const hataPair = `${cryptoAsset.toUpperCase()}MYR`;
-				sourceData = await fetchHataPrice(hataPair);
+				sourceData = await fetchLunoPrice(
+					`${cryptoAsset.toUpperCase()}MYR`
+				);
 			} else {
-				throw new Error("Unsupported source platform.");
+				sourceData = await fetchHataPrice(
+					`${cryptoAsset.toUpperCase()}MYR`
+				);
 			}
 
-			// Fetch price from target platform (Binance/Huobi - USDT)
+			// Fetch target platform price
 			if (targetPlatform === "binance") {
-				const binanceSymbol = `${cryptoAsset.toUpperCase()}USDT`;
-				targetData = await fetchBinancePrice(binanceSymbol);
-			} else if (targetPlatform === "huobi") {
-				const huobiSymbol = `${cryptoAsset.toLowerCase()}usdt`; // Huobi uses lowercase symbols
-				targetData = await fetchHuobiPrice(huobiSymbol);
+				targetData = await fetchBinancePrice(
+					`${cryptoAsset.toUpperCase()}USDT`
+				);
 			} else {
-				throw new Error("Unsupported target platform.");
+				targetData = await fetchHuobiPrice(
+					`${cryptoAsset.toLowerCase()}usdt`
+				);
 			}
 
 			if (sourceData.price && targetData.price) {
 				const rate = sourceData.price / targetData.price;
+				const prevRate = prevRateRef.current;
+				setPreviousExchangeRate(prevRate);
 
-				if (exchangeRateDetailsRef.current?.rate) {
-					setPreviousExchangeRate(
-						exchangeRateDetailsRef.current.rate
-					);
-				} else {
-					setPreviousExchangeRate(null);
-				}
+				const sourceName =
+					sourcePlatform.charAt(0).toUpperCase() +
+					sourcePlatform.slice(1);
+				const targetName =
+					targetPlatform.charAt(0).toUpperCase() +
+					targetPlatform.slice(1);
 
 				setExchangeRateDetails({
 					rate,
 					source: {
-						platform:
-							sourcePlatform.charAt(0).toUpperCase() +
-							sourcePlatform.slice(1),
+						platform: sourceName,
 						price: sourceData.price,
 						timestamp: sourceData.timestamp,
 						bid: sourceData.bid,
@@ -110,9 +123,7 @@ export default function Home() {
 						volume: sourceData.volume,
 					},
 					target: {
-						platform:
-							targetPlatform.charAt(0).toUpperCase() +
-							targetPlatform.slice(1),
+						platform: targetName,
 						price: targetData.price,
 						timestamp: targetData.timestamp,
 						bid: targetData.bid,
@@ -121,29 +132,27 @@ export default function Home() {
 					},
 				});
 
-				// Store historical rate and downsample
+				// Update historical rates efficiently
+				const now = Date.now();
+				const newRatePoint: HistoricalRate = {
+					rate,
+					timestamp: now,
+					sourcePlatform: sourceName,
+					targetPlatform: targetName,
+					cryptoAsset: cryptoAsset.toUpperCase(),
+				};
+
 				setHistoricalRates((prevRates) => {
-					const updatedRates = [
-						...prevRates,
-						{
-							rate,
-							timestamp: Date.now(),
-							sourcePlatform:
-								sourcePlatform.charAt(0).toUpperCase() +
-								sourcePlatform.slice(1),
-							targetPlatform:
-								targetPlatform.charAt(0).toUpperCase() +
-								targetPlatform.slice(1),
-							cryptoAsset: cryptoAsset.toUpperCase(),
-						},
-					];
-					return downsampleHistoricalRates(updatedRates, Date.now());
+					const updated = [...prevRates, newRatePoint];
+					return downsampleHistoricalRates(updated, now);
 				});
 			} else {
-				throw new Error("Could not fetch prices for both platforms.");
+				throw new Error(
+					"Could not fetch prices for both platforms."
+				);
 			}
 
-			// Fetch external rates concurrently using Promise.allSettled to handle individual errors
+			// Fetch external rates concurrently
 			const [coingeckoResult, coinbaseResult, bnmResult] =
 				await Promise.allSettled([
 					fetchCoinGeckoPrice(),
@@ -151,6 +160,7 @@ export default function Home() {
 					fetchBnmPrice(),
 				]);
 
+			// Batch external state updates
 			setCoinGeckoRate(
 				coingeckoResult.status === "fulfilled"
 					? coingeckoResult.value
@@ -165,7 +175,7 @@ export default function Home() {
 				bnmResult.status === "fulfilled" ? bnmResult.value : null
 			);
 		} catch (err: unknown) {
-			setHasError(true); // Set error state to true
+			setHasError(true);
 			toast.error("Oops! Something went wrong", {
 				description:
 					err instanceof Error
@@ -177,110 +187,149 @@ export default function Home() {
 		}
 	}, [sourcePlatform, targetPlatform, cryptoAsset]);
 
+	// Auto-fetch on mount and schedule periodic refresh
 	useEffect(() => {
-		if (rateChangeAnimation) {
-			const timer = setTimeout(() => {
-				setRateChangeAnimation("");
-			}, 2000); // 2000ms matches the animation duration in globals.css
-			return () => clearTimeout(timer);
-		}
+		calculateExchangeRate();
+		const refreshInterval = setInterval(
+			calculateExchangeRate,
+			AUTO_REFRESH_INTERVAL
+		);
+		return () => clearInterval(refreshInterval);
+	}, [calculateExchangeRate]);
+
+	// Animate rate changes
+	useEffect(() => {
+		if (!rateChangeAnimation) return;
+
+		const timer = setTimeout(() => {
+			setRateChangeAnimation("");
+		}, ANIMATION_DURATION);
+		return () => clearTimeout(timer);
 	}, [rateChangeAnimation]);
 
+	// Detect rate direction for animation
 	useEffect(() => {
-		if (!loading && exchangeRateDetails && previousExchangeRate !== null) {
-			if (exchangeRateDetails.rate < previousExchangeRate) {
-				setRateChangeAnimation("green-pulse");
-			} else if (exchangeRateDetails.rate > previousExchangeRate) {
-				setRateChangeAnimation("red-pulse");
-			} else {
-				// If rates are the same, clear any existing animation
-				setRateChangeAnimation("");
-			}
-		} else if (
-			!loading &&
-			exchangeRateDetails &&
-			previousExchangeRate === null
-		) {
-			// If it's the initial load and there's no previous rate, don't animate
+		if (loading || !exchangeRateDetails || previousExchangeRate === null)
+			return;
+
+		if (exchangeRateDetails.rate < previousExchangeRate) {
+			setRateChangeAnimation("green-pulse");
+		} else if (exchangeRateDetails.rate > previousExchangeRate) {
+			setRateChangeAnimation("red-pulse");
+		} else {
 			setRateChangeAnimation("");
 		}
 	}, [loading, exchangeRateDetails, previousExchangeRate]);
 
+	// Calculate percentage differences - memoized computation
 	useEffect(() => {
-		// Auto-fetch and calculate rate on page load for the default pair
-		calculateExchangeRate();
-
-		// Refreshes every 60 seconds
-		const refreshInterval = setInterval(() => {
-			calculateExchangeRate();
-		}, 60000); // Refresh every 60 seconds
-
-		return () => clearInterval(refreshInterval); // Cleanup for interval
-	}, [sourcePlatform, targetPlatform, cryptoAsset, calculateExchangeRate]); // Re-run when dropdowns change
-
-	useEffect(() => {
-		if (exchangeRateDetails?.rate) {
-			const baseRate = exchangeRateDetails.rate;
-
-			if (coinGeckoRate) {
-				setCoinGeckoDiff(((coinGeckoRate - baseRate) / baseRate) * 100);
-			}
-			if (coinbaseRate) {
-				setCoinbaseDiff(((coinbaseRate - baseRate) / baseRate) * 100);
-			}
-			if (bnmRate?.rate.middle_rate) {
-				setBnmDiff(
-					((bnmRate.rate.middle_rate - baseRate) / baseRate) * 100
-				);
-			}
+		if (!exchangeRateDetails?.rate) {
+			setCoinGeckoDiff(null);
+			setCoinbaseDiff(null);
+			setBnmDiff(null);
+			return;
 		}
-	}, [exchangeRateDetails, coinGeckoRate, coinbaseRate, bnmRate]);
+
+		const baseRate = exchangeRateDetails.rate;
+		setCoinGeckoDiff(
+			coinGeckoRate ? ((coinGeckoRate - baseRate) / baseRate) * 100 : null
+		);
+		setCoinbaseDiff(
+			coinbaseRate ? ((coinbaseRate - baseRate) / baseRate) * 100 : null
+		);
+		setBnmDiff(
+			bnmRate?.rate.middle_rate
+				? ((bnmRate.rate.middle_rate - baseRate) / baseRate) * 100
+				: null
+		);
+	}, [
+		exchangeRateDetails,
+		coinGeckoRate,
+		coinbaseRate,
+		bnmRate,
+	]);
+
+	// Memoized derived values
+	const canShowChart = historicalRates.length > 1;
+
+	const chartProps = useMemo(
+		() => ({ historicalRates }),
+		[historicalRates]
+	);
+
+	const detailsDialogProps = useMemo(
+		() => ({
+			exchangeRateDetails,
+			loading,
+			cryptoAsset,
+			className: "flex-1",
+		}),
+		[exchangeRateDetails, loading, cryptoAsset]
+	);
+
+	const badgesProps = useMemo(
+		() => ({
+			coinGeckoRate,
+			coinGeckoDiff,
+			coinbaseRate,
+			coinbaseDiff,
+			bnmRate,
+			bnmDiff,
+			loading,
+		}),
+		[
+			coinGeckoRate,
+			coinGeckoDiff,
+			coinbaseRate,
+			coinbaseDiff,
+			bnmRate,
+			bnmDiff,
+			loading,
+		]
+	);
+
+	const selectorsProps = useMemo(
+		() => ({
+			sourcePlatform,
+			setSourcePlatform,
+			targetPlatform,
+			setTargetPlatform,
+			cryptoAsset,
+			setCryptoAsset,
+		}),
+		[sourcePlatform, targetPlatform, cryptoAsset]
+	);
+
+	const displayProps = useMemo(
+		() => ({
+			exchangeRateDetails,
+			loading,
+			hasError,
+			rateChangeAnimation,
+		}),
+		[exchangeRateDetails, loading, hasError, rateChangeAnimation]
+	);
 
 	return (
 		<div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4">
 			<Card className="w-full max-w-md">
 				<AppHeader />
 
-				<ExchangeRateDisplay
-					exchangeRateDetails={exchangeRateDetails}
-					loading={loading}
-					hasError={hasError}
-					rateChangeAnimation={rateChangeAnimation}
-				/>
+				<ExchangeRateDisplay {...displayProps} />
 
 				{showChart && (
 					<div className="transition-all duration-500 ease-in-out overflow-hidden">
-						<ExchangeRateChart historicalRates={historicalRates} />
+						<ExchangeRateChart {...chartProps} />
 					</div>
 				)}
 
-				<ExternalRatesBadges
-					coinGeckoRate={coinGeckoRate}
-					coinGeckoDiff={coinGeckoDiff}
-					coinbaseRate={coinbaseRate}
-					coinbaseDiff={coinbaseDiff}
-					bnmRate={bnmRate}
-					bnmDiff={bnmDiff}
-					loading={loading}
-				/>
+				<ExternalRatesBadges {...badgesProps} />
 
-				<PlatformAssetSelectors
-					sourcePlatform={sourcePlatform}
-					setSourcePlatform={setSourcePlatform}
-					targetPlatform={targetPlatform}
-					setTargetPlatform={setTargetPlatform}
-					cryptoAsset={cryptoAsset}
-					setCryptoAsset={setCryptoAsset}
-				/>
+				<PlatformAssetSelectors {...selectorsProps} />
 
 				<CardFooter className="flex w-full items-center gap-2">
-					<ExchangeDetailsDialog
-						exchangeRateDetails={exchangeRateDetails}
-						loading={loading}
-						cryptoAsset={cryptoAsset}
-						className="flex-1"
-					/>
-					{historicalRates.length > 1 && (
+					<ExchangeDetailsDialog {...detailsDialogProps} />
+					{canShowChart && (
 						<Button
 							onClick={() => setShowChart(!showChart)}
 							className="flex-1"

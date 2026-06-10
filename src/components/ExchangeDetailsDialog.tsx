@@ -21,19 +21,18 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
+import React, { memo } from "react";
 
-const EXCHANGE_URLS: { [key: string]: string } = {
+const EXCHANGE_URLS: Record<string, string> = {
 	luno: "https://www.luno.com/trade/markets/",
-	hata: "https://hata.io/my/exchange", // No direct pair link
+	hata: "https://hata.io/my/exchange",
 	binance: "https://www.binance.com/en/trade/",
 	huobi: "https://www.htx.com/trade/",
 };
 
 function getExchangeUrl(platform: string, cryptoAsset: string): string | null {
 	const baseUrl = EXCHANGE_URLS[platform.toLowerCase()];
-	if (!baseUrl) {
-		return null;
-	}
+	if (!baseUrl) return null;
 
 	switch (platform.toLowerCase()) {
 		case "luno":
@@ -43,7 +42,7 @@ function getExchangeUrl(platform: string, cryptoAsset: string): string | null {
 		case "huobi":
 			return `${baseUrl}${cryptoAsset.toLowerCase()}_usdt?type=spot`;
 		case "hata":
-			return baseUrl; // Hata has no direct pair link
+			return baseUrl;
 		default:
 			return null;
 	}
@@ -53,10 +52,102 @@ interface ExchangeDetailsDialogProps {
 	exchangeRateDetails: ExchangeRateDetails | null;
 	loading: boolean;
 	cryptoAsset: string;
-	className?: string; // Add className to props
+	className?: string;
 }
 
-export default function ExchangeDetailsDialog({
+function formatRate(val: number | undefined | null): string {
+	return val !== undefined && val !== null ? val.toFixed(4) : "N/A";
+}
+
+function PriceField({
+	name,
+	value,
+	unit,
+}: {
+	name: string;
+	value: number | undefined | null;
+	unit: string;
+}) {
+	return (
+		<div className="col-span-1">
+			<p className="text-sm font-medium">{name}:</p>
+			<p className="text-sm">
+				{formatRate(value)} {unit}
+			</p>
+		</div>
+	);
+}
+
+function PlatformSection({
+	label,
+	data,
+	currency,
+	asset,
+}: {
+	label: string;
+	data: ExchangeRateDetails["source"] | ExchangeRateDetails["target"];
+	currency: string;
+	asset: string;
+}) {
+	const url = getExchangeUrl(data.platform, asset);
+	const isClickable = !!url;
+
+	return (
+		<>
+			<div className="col-span-2 text-lg font-semibold flex items-center gap-2">
+				{label}
+				<TooltipProvider>
+					<Tooltip>
+						<TooltipTrigger asChild>
+							<Link
+								href={url || "#"}
+								target="_blank"
+								rel="noopener noreferrer"
+								className={`flex items-center ${
+									isClickable
+										? "cursor-pointer"
+										: "cursor-default"
+								}`}
+							>
+								<Badge variant="secondary">
+									{data.platform}
+								</Badge>
+							</Link>
+						</TooltipTrigger>
+						<TooltipContent>
+							<p>
+								Visit {data.platform} official website in new
+								tab
+							</p>
+						</TooltipContent>
+					</Tooltip>
+				</TooltipProvider>
+				<Badge variant="outline">{asset.toUpperCase()}</Badge>
+			</div>
+			<PriceField name="Price" value={data.price} unit={currency} />
+			{data.volume && (
+				<div className="col-span-1">
+					<p className="text-sm font-medium">Volume:</p>
+					<p className="text-sm">{data.volume}</p>
+				</div>
+			)}
+			{data.bid !== undefined && (
+				<PriceField name="Bid" value={data.bid} unit={currency} />
+			)}
+			{data.ask !== undefined && (
+				<PriceField name="Ask" value={data.ask} unit={currency} />
+			)}
+			<div className="col-span-2">
+				<p className="text-sm font-medium">Datetime:</p>
+				<p className="text-sm">
+					{new Date(data.timestamp).toLocaleString()}
+				</p>
+			</div>
+		</>
+	);
+}
+
+const ExchangeDetailsDialog = memo(function ExchangeDetailsDialog({
 	exchangeRateDetails,
 	loading,
 	cryptoAsset,
@@ -96,207 +187,23 @@ export default function ExchangeDetailsDialog({
 				) : exchangeRateDetails ? (
 					<div className="grid gap-4 py-4">
 						<div className="grid grid-cols-2 gap-4">
-							<div className="col-span-2 text-lg font-semibold flex items-center gap-2">
-								Source
-								<TooltipProvider>
-									<Tooltip>
-										<TooltipTrigger asChild>
-											<Link
-												href={
-													getExchangeUrl(
-														exchangeRateDetails
-															.source.platform,
-														cryptoAsset
-													) || "#"
-												}
-												target="_blank"
-												rel="noopener noreferrer"
-												className={`flex items-center ${
-													getExchangeUrl(
-														exchangeRateDetails
-															.source.platform,
-														cryptoAsset
-													)
-														? "cursor-pointer"
-														: "cursor-default"
-												}`}
-											>
-												<Badge variant="secondary">
-													{
-														exchangeRateDetails
-															.source.platform
-													}
-												</Badge>
-											</Link>
-										</TooltipTrigger>
-										<TooltipContent>
-											<p>
-												Visit{" "}
-												{
-													exchangeRateDetails.source
-														.platform
-												}{" "}
-												official website in new tab
-											</p>
-										</TooltipContent>
-									</Tooltip>
-								</TooltipProvider>
-								<Badge variant="outline">
-									{cryptoAsset.toUpperCase()}
-								</Badge>
-							</div>
-							<div className="col-span-1">
-								<p className="text-sm font-medium">Price:</p>
-								<p className="text-sm">
-									{exchangeRateDetails.source.price.toFixed(
-										4
-									)}{" "}
-									MYR
-								</p>
-							</div>
-							{exchangeRateDetails.source.volume && (
-								<div className="col-span-1">
-									<p className="text-sm font-medium">
-										Volume:
-									</p>
-									<p className="text-sm">
-										{exchangeRateDetails.source.volume}
-									</p>
-								</div>
-							)}
-							{exchangeRateDetails.source.bid && (
-								<div className="col-span-1">
-									<p className="text-sm font-medium">Bid:</p>
-									<p className="text-sm">
-										{exchangeRateDetails.source.bid.toFixed(
-											4
-										)}{" "}
-										MYR
-									</p>
-								</div>
-							)}
-							{exchangeRateDetails.source.ask && (
-								<div className="col-span-1">
-									<p className="text-sm font-medium">Ask:</p>
-									<p className="text-sm">
-										{exchangeRateDetails.source.ask.toFixed(
-											4
-										)}{" "}
-										MYR
-									</p>
-								</div>
-							)}
-							<div className="col-span-2">
-								<p className="text-sm font-medium">Datetime:</p>
-								<p className="text-sm">
-									{new Date(
-										exchangeRateDetails.source.timestamp
-									).toLocaleString()}
-								</p>
-							</div>
+							<PlatformSection
+								label="Source"
+								data={exchangeRateDetails.source}
+								currency="MYR"
+								asset={cryptoAsset}
+							/>
 						</div>
 
 						<Separator />
 
 						<div className="grid grid-cols-2 gap-4">
-							<div className="col-span-2 text-lg font-semibold flex items-center gap-2">
-								Target
-								<TooltipProvider>
-									<Tooltip>
-										<TooltipTrigger asChild>
-											<Link
-												href={
-													getExchangeUrl(
-														exchangeRateDetails
-															.target.platform,
-														cryptoAsset
-													) || "#"
-												}
-												target="_blank"
-												rel="noopener noreferrer"
-												className={`flex items-center ${
-													getExchangeUrl(
-														exchangeRateDetails
-															.target.platform,
-														cryptoAsset
-													)
-														? "cursor-pointer"
-														: "cursor-default"
-												}`}
-											>
-												<Badge variant="secondary">
-													{
-														exchangeRateDetails
-															.target.platform
-													}
-												</Badge>
-											</Link>
-										</TooltipTrigger>
-										<TooltipContent>
-											<p>
-												Visit{" "}
-												{
-													exchangeRateDetails.target
-														.platform
-												}{" "}
-												official website in new tab
-											</p>
-										</TooltipContent>
-									</Tooltip>
-								</TooltipProvider>
-								<Badge variant="outline">
-									{cryptoAsset.toUpperCase()}
-								</Badge>
-							</div>
-							<div className="col-span-1">
-								<p className="text-sm font-medium">Price:</p>
-								<p className="text-sm">
-									{exchangeRateDetails.target.price.toFixed(
-										4
-									)}{" "}
-									USDT
-								</p>
-							</div>
-							{exchangeRateDetails.target.volume && (
-								<div className="col-span-1">
-									<p className="text-sm font-medium">
-										Volume:
-									</p>
-									<p className="text-sm">
-										{exchangeRateDetails.target.volume}
-									</p>
-								</div>
-							)}
-							{exchangeRateDetails.target.bid && (
-								<div className="col-span-1">
-									<p className="text-sm font-medium">Bid:</p>
-									<p className="text-sm">
-										{exchangeRateDetails.target.bid.toFixed(
-											4
-										)}{" "}
-										USDT
-									</p>
-								</div>
-							)}
-							{exchangeRateDetails.target.ask && (
-								<div className="col-span-1">
-									<p className="text-sm font-medium">Ask:</p>
-									<p className="text-sm">
-										{exchangeRateDetails.target.ask.toFixed(
-											4
-										)}{" "}
-										USDT
-									</p>
-								</div>
-							)}
-							<div className="col-span-2">
-								<p className="text-sm font-medium">Datetime:</p>
-								<p className="text-sm">
-									{new Date(
-										exchangeRateDetails.target.timestamp
-									).toLocaleString()}
-								</p>
-							</div>
+							<PlatformSection
+								label="Target"
+								data={exchangeRateDetails.target}
+								currency="USDT"
+								asset={cryptoAsset}
+							/>
 						</div>
 					</div>
 				) : null}
@@ -308,4 +215,6 @@ export default function ExchangeDetailsDialog({
 			</DialogContent>
 		</Dialog>
 	);
-}
+});
+
+export default ExchangeDetailsDialog;
