@@ -340,17 +340,19 @@ export default function Home() {
 				<PlatformAssetSelectors {...selectorsProps} />
 
 				<CardFooter className="flex w-full items-center gap-2">
-					<ExchangeDetailsDialog {...detailsDialogProps} />
-					{canShowChart && (
-						<Button
-							onClick={() => setShowChart(!showChart)}
-							className="flex-1"
-							variant={showChart ? "secondary" : "outline"}
-							aria-label="Toggle chart visibility"
-						>
-							<ChartSpline className="h-4 w-4" />
-						</Button>
-					)}
+					<div className="flex w-1/2 gap-2">
+						<ExchangeDetailsDialog {...detailsDialogProps} />
+						{canShowChart && (
+							<Button
+								onClick={() => setShowChart(!showChart)}
+								className="flex-1"
+								variant={showChart ? "secondary" : "outline"}
+								aria-label="Toggle chart visibility"
+							>
+								<ChartSpline className="h-4 w-4" />
+							</Button>
+						)}
+					</div>
 					<Button
 						onClick={calculateExchangeRate}
 						className="relative flex-1 overflow-hidden"
