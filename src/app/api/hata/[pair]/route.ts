@@ -30,16 +30,26 @@ export async function GET(
 
 	try {
 		// Fetch exchange info and order book concurrently
+		const commonHeaders = {
+			headers: {
+				"User-Agent":
+					"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+				Accept: "application/json",
+			},
+		};
+
 		const [exchangeInfoResponse, orderBookResponse] = await Promise.all([
 			fetcher<{
 				data: HataExchangeInfoData[];
 			}>(
 				"https://my-api.hata.io/orderbook/api/v2/exchange-info",
-				"Hata Exchange Info API error"
+				"Hata Exchange Info API error",
+				commonHeaders
 			),
 			fetcher<{ data: HataOrderBookData }>(
 				`https://my-api.hata.io/orderbook/api/orderbook?pair_name=${upperCasePair}`,
-				"Hata Order Book API error"
+				"Hata Order Book API error",
+				commonHeaders
 			),
 		]);
 
@@ -67,9 +77,9 @@ export async function GET(
 		} else {
 			return NextResponse.json(
 				{
-					error: "Hata API returned unexpected data structure or pair not found.",
+					error: "Hata API returned unexpected or empty data.",
 				},
-				{ status: 500 }
+				{ status: 502 }
 			);
 		}
 	} catch (error: unknown) {

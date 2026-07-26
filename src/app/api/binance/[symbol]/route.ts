@@ -36,15 +36,22 @@ export async function GET(
 	try {
 		const data = await fetcher<BinanceApiResponse>(
 			`https://api.binance.com/api/v3/ticker/24hr?symbol=${upperCaseSymbol}`,
-			"Binance API error"
+			"Binance API error",
+			{
+				headers: {
+					"User-Agent":
+						"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+					Accept: "application/json",
+				},
+			}
 		);
 
-		if (data) {
+		if (data && data.symbol) {
 			return NextResponse.json(data);
 		} else {
 			return NextResponse.json(
-				{ error: "Binance API returned unexpected data structure." },
-				{ status: 500 }
+				{ error: "Binance API returned unexpected or empty data." },
+				{ status: 502 }
 			);
 		}
 	} catch (error: unknown) {

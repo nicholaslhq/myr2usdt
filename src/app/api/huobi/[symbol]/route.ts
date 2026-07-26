@@ -31,15 +31,22 @@ export async function GET(
 		const lowerCaseSymbol = symbol.toLowerCase();
 		const data = await fetcher<HuobiApiResponse>(
 			`https://api.huobi.pro/market/detail/merged?symbol=${lowerCaseSymbol}`,
-			"Huobi API error"
+			"Huobi API error",
+			{
+				headers: {
+					"User-Agent":
+						"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+					Accept: "application/json",
+				},
+			}
 		);
 
-		if (data) {
+		if (data && data.tick) {
 			return NextResponse.json(data);
 		} else {
 			return NextResponse.json(
-				{ error: "Huobi API returned unexpected data structure." },
-				{ status: 500 }
+				{ error: "Huobi API returned unexpected or empty data." },
+				{ status: 502 }
 			);
 		}
 	} catch (error: unknown) {

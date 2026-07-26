@@ -22,15 +22,22 @@ export async function GET(
 	try {
 		const data = await fetcher<LunoApiResponse>(
 			`https://api.luno.com/api/1/ticker?pair=${upperCasePair}`,
-			"Luno API error"
+			"Luno API error",
+			{
+				headers: {
+					"User-Agent":
+						"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+					Accept: "application/json",
+				},
+			}
 		);
 
-		if (data) {
+		if (data && data.pair) {
 			return NextResponse.json(data);
 		} else {
 			return NextResponse.json(
-				{ error: "Luno API returned unexpected data structure." },
-				{ status: 500 }
+				{ error: "Luno API returned unexpected or empty data." },
+				{ status: 502 }
 			);
 		}
 	} catch (error: unknown) {

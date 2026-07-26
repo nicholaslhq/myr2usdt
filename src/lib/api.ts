@@ -21,7 +21,7 @@ const MAX_RETRIES = 2;
 const RETRY_BASE_DELAY_MS = 500;
 
 // Default fetch timeout
-const FETCH_TIMEOUT_MS = 10_000;
+const FETCH_TIMEOUT_MS = 15_000;
 
 function evictInFlightIfNeeded() {
 	if (inFlightFetches.size > MAX_IN_FLIGHT_ENTRIES) {
@@ -52,7 +52,7 @@ function cachedFetch<T>(
 	url: string,
 	cacheKey: string | null,
 	ttl: number,
-	options?: RequestInit
+	options?: RequestInit,
 ): Promise<T> {
 	// Check cache first
 	if (cacheKey) {
@@ -80,7 +80,7 @@ function cachedFetch<T>(
 				});
 				if (!response.ok) {
 					throw new Error(
-						`Server-side fetch failed: ${response.statusText} (${response.status})`
+						`Server-side fetch failed: ${response.statusText} (${response.status})`,
 					);
 				}
 				return (await response.json()) as T;
@@ -147,7 +147,7 @@ export async function fetcher<T>(
 	errorMessage: string,
 	options?: RequestInit,
 	clientFallbackUrl?: string,
-	clientFallbackOptions?: RequestInit
+	clientFallbackOptions?: RequestInit,
 ): Promise<T> {
 	const controller = new AbortController();
 	const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
@@ -159,17 +159,17 @@ export async function fetcher<T>(
 		});
 		if (!response.ok) {
 			throw new Error(
-				`${errorMessage}: Server-side fetch failed: ${response.statusText}`
+				`${errorMessage}: Server-side fetch failed: ${response.statusText}`,
 			);
 		}
-		const result = await response.json() as T;
+		const result = (await response.json()) as T;
 		return result;
 	} catch (serverError: unknown) {
 		if (clientFallbackUrl) {
 			const fallbackController = new AbortController();
 			const fallbackTimeoutId = setTimeout(
 				() => fallbackController.abort(),
-				FETCH_TIMEOUT_MS
+				FETCH_TIMEOUT_MS,
 			);
 
 			try {
@@ -179,10 +179,10 @@ export async function fetcher<T>(
 				});
 				if (!clientResponse.ok) {
 					throw new Error(
-						`${errorMessage}: Client-side fetch failed: ${clientResponse.statusText}`
+						`${errorMessage}: Client-side fetch failed: ${clientResponse.statusText}`,
 					);
 				}
-				const clientResult = await clientResponse.json() as T;
+				const clientResult = (await clientResponse.json()) as T;
 				return clientResult;
 			} catch (clientError: unknown) {
 				throw new Error(
@@ -190,7 +190,7 @@ export async function fetcher<T>(
 						clientError instanceof Error
 							? clientError.message
 							: "Unknown error"
-					}`
+					}`,
 				);
 			} finally {
 				clearTimeout(fallbackTimeoutId);
@@ -201,7 +201,7 @@ export async function fetcher<T>(
 				serverError instanceof Error
 					? serverError.message
 					: "Unknown error"
-			}`
+			}`,
 		);
 	} finally {
 		clearTimeout(timeoutId);
@@ -216,7 +216,7 @@ async function fetchWithCache<T>(
 	url: string,
 	cacheKey: string | null,
 	ttl: number,
-	options?: RequestInit
+	options?: RequestInit,
 ): Promise<T> {
 	return cachedFetch<T>(url, cacheKey, ttl, options);
 }
@@ -225,7 +225,7 @@ export async function fetchLunoPrice(pair: string): Promise<MarketDetail> {
 	const data = await fetchWithCache<LunoApiResponse>(
 		`/api/luno/${pair}`,
 		null, // Luno prices are not cached (they're already fetched server-side)
-		0
+		0,
 	);
 	return {
 		price: parseFloat(data.last_trade),
@@ -240,7 +240,7 @@ export async function fetchBinancePrice(symbol: string): Promise<MarketDetail> {
 	const data = await fetchWithCache<BinanceApiResponse>(
 		`/api/binance/${symbol}`,
 		null,
-		0
+		0,
 	);
 	return {
 		price: parseFloat(data.lastPrice),
@@ -255,7 +255,7 @@ export async function fetchHuobiPrice(symbol: string): Promise<MarketDetail> {
 	const data = await fetchWithCache<HuobiApiResponse>(
 		`/api/huobi/${symbol}`,
 		null,
-		0
+		0,
 	);
 	return {
 		price: data.tick.close,
@@ -270,14 +270,14 @@ export async function fetchCoinGeckoPrice(): Promise<number> {
 	const data = await fetchWithCache<CoinGeckoApiResponse>(
 		"https://api.coingecko.com/api/v3/simple/price?ids=tether&vs_currencies=myr",
 		COINGECKO_CACHE_KEY,
-		CACHE_TTL
+		CACHE_TTL,
 	);
 
 	if (data?.tether?.myr !== undefined) {
 		return data.tether.myr;
 	}
 	throw new Error(
-		"CoinGecko API returned unexpected data structure for USDT/MYR."
+		"CoinGecko API returned unexpected data structure for USDT/MYR.",
 	);
 }
 
@@ -285,7 +285,7 @@ export async function fetchCoinbasePrice(): Promise<number> {
 	const data = await fetchWithCache<CoinbaseApiResponse>(
 		"https://api.coinbase.com/v2/exchange-rates?currency=USDT",
 		COINBASE_CACHE_KEY,
-		CACHE_TTL
+		CACHE_TTL,
 	);
 
 	if (data?.data?.amount !== undefined) {
@@ -299,7 +299,7 @@ export async function fetchCoinbasePrice(): Promise<number> {
 	}
 
 	throw new Error(
-		"Coinbase API returned unexpected data structure for USDT/MYR."
+		"Coinbase API returned unexpected data structure for USDT/MYR.",
 	);
 }
 
@@ -307,7 +307,7 @@ export async function fetchHataPrice(pair: string): Promise<MarketDetail> {
 	const data = await fetchWithCache<HataApiResponse>(
 		`/api/hata/${pair}`,
 		null,
-		0
+		0,
 	);
 
 	const bid = parseFloat(data.orderBook?.bids?.[0]?.price || "0");
@@ -328,7 +328,7 @@ export async function fetchBnmPrice(): Promise<BnmExchangeRate> {
 	const data = await fetchWithCache<BnmExchangeRate>(
 		"/api/bnm/usdmyr",
 		BNM_CACHE_KEY,
-		CACHE_TTL
+		CACHE_TTL,
 	);
 
 	return data;
