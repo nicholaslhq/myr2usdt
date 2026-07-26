@@ -13,6 +13,7 @@ interface ExchangeRateDisplayProps {
 	loading: boolean;
 	hasError: boolean;
 	rateChangeAnimation: "green-pulse" | "red-pulse" | "";
+	inverted: boolean;
 }
 
 export default function ExchangeRateDisplay({
@@ -20,11 +21,18 @@ export default function ExchangeRateDisplay({
 	loading,
 	hasError,
 	rateChangeAnimation,
+	inverted,
 }: ExchangeRateDisplayProps) {
+	const displayRate = exchangeRateDetails
+		? inverted
+			? 1 / exchangeRateDetails.rate
+			: exchangeRateDetails.rate
+		: 0;
+
 	return (
 		<>
 			{exchangeRateDetails ? (
-				<CardContent>
+				<CardContent className="flex items-center justify-center">
 					<div className="text-center">
 						<Tooltip>
 							<TooltipTrigger asChild>
@@ -39,7 +47,7 @@ export default function ExchangeRateDisplay({
 								>
 									<NumberFlow
 										value={parseFloat(
-											exchangeRateDetails.rate.toFixed(4)
+											displayRate.toFixed(4)
 										)}
 										format={{
 											notation: "standard",

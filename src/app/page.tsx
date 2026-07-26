@@ -41,6 +41,7 @@ export default function Home() {
 	const [sourcePlatform, setSourcePlatform] = useState("luno");
 	const [targetPlatform, setTargetPlatform] = useState("binance");
 	const [cryptoAsset, setCryptoAsset] = useState("xrp");
+	const [inverted, setInverted] = useState(false);
 	const [exchangeRateDetails, setExchangeRateDetails] =
 		useState<ExchangeRateDetails | null>(null);
 	const [previousExchangeRate, setPreviousExchangeRate] = useState<
@@ -267,7 +268,7 @@ export default function Home() {
 	// Memoized derived values
 	const canShowChart = historicalRates.length > 1;
 
-	const chartProps = useMemo(() => ({ historicalRates }), [historicalRates]);
+	const chartProps = useMemo(() => ({ historicalRates, inverted }), [historicalRates, inverted]);
 
 	const detailsDialogProps = useMemo(
 		() => ({
@@ -288,6 +289,7 @@ export default function Home() {
 			bnmRate,
 			bnmDiff,
 			loading,
+			inverted,
 		}),
 		[
 			coinGeckoRate,
@@ -297,6 +299,7 @@ export default function Home() {
 			bnmRate,
 			bnmDiff,
 			loading,
+			inverted,
 		],
 	);
 
@@ -318,14 +321,15 @@ export default function Home() {
 			loading,
 			hasError,
 			rateChangeAnimation,
+			inverted,
 		}),
-		[exchangeRateDetails, loading, hasError, rateChangeAnimation],
+		[exchangeRateDetails, loading, hasError, rateChangeAnimation, inverted],
 	);
 
 	return (
 		<div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4">
 			<Card className="w-full max-w-md">
-				<AppHeader />
+				<AppHeader inverted={inverted} onToggleInversion={() => setInverted(!inverted)} />
 
 				<ExchangeRateDisplay {...displayProps} />
 

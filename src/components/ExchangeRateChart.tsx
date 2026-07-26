@@ -36,10 +36,12 @@ const LINE_COLOR = "#26A17B";
 interface ExchangeRateChartProps {
 	historicalRates: HistoricalRate[];
 	pointThreshold?: number;
+	inverted: boolean;
 }
 
 function buildChartData(
-	historicalRates: HistoricalRate[]
+	historicalRates: HistoricalRate[],
+	inverted: boolean
 ): ChartData<"line"> {
 	const hidePoints = historicalRates.length > CHART_POINTS_THRESHOLD;
 
@@ -50,7 +52,9 @@ function buildChartData(
 		datasets: [
 			{
 				label: "Exchange Rate",
-				data: historicalRates.map((rate) => rate.rate),
+				data: historicalRates.map((rate) =>
+					inverted ? 1 / rate.rate : rate.rate
+				),
 				fill: false,
 				borderColor: LINE_COLOR,
 				borderWidth: 2,
@@ -65,7 +69,8 @@ function buildChartData(
 
 // Tooltip callback factory - captures historicalRates at creation time
 function buildTooltipCallback(
-	historicalRates: HistoricalRate[]
+	historicalRates: HistoricalRate[],
+	inverted: boolean
 ): (context: TooltipItem<"line">) => string | string[] {
 	return function (context: TooltipItem<"line">) {
 		const historicalRate =
@@ -77,8 +82,9 @@ function buildTooltipCallback(
 		) {
 			return "N/A";
 		}
+		const displayRate = inverted ? 1 / historicalRate.rate : historicalRate.rate;
 		const labels: string[] = [];
-		labels.push(`Rate: ${historicalRate.rate.toFixed(4)}`);
+		labels.push(`Rate: ${displayRate.toFixed(4)}`);
 		if (historicalRate.sourcePlatform) {
 			labels.push(`Source: ${historicalRate.sourcePlatform}`);
 		}
@@ -95,17 +101,18 @@ function buildTooltipCallback(
 export default React.memo(function ExchangeRateChart({
 	historicalRates,
 	pointThreshold = CHART_POINTS_THRESHOLD,
+	inverted,
 }: ExchangeRateChartProps) {
 	const hidePoints = historicalRates.length > pointThreshold;
 
 	const data = useMemo(
-		() => buildChartData(historicalRates),
-		[historicalRates]
+		() => buildChartData(historicalRates, inverted),
+		[historicalRates, inverted]
 	);
 
 	const tooltipCallback = useMemo(
-		() => buildTooltipCallback(historicalRates),
-		[historicalRates]
+		() => buildTooltipCallback(historicalRates, inverted),
+		[historicalRates, inverted]
 	);
 
 	const options: ChartOptions<"line"> = useMemo(

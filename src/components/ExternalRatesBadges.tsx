@@ -18,6 +18,7 @@ interface ExternalRatesBadgesProps {
 	bnmRate: BnmExchangeRate | null;
 	bnmDiff: number | null;
 	loading: boolean;
+	inverted: boolean;
 }
 
 // Pre-lookup frequently used values to avoid repeated optional chaining
@@ -32,12 +33,17 @@ const ExternalRatesBadges = memo(function ExternalRatesBadges({
 	bnmRate,
 	bnmDiff,
 	loading,
+	inverted,
 }: ExternalRatesBadgesProps) {
 	const bnmMiddleRate = bnmRate?.rate.middle_rate;
 
+	const displayCoinGeckoRate = inverted && coinGeckoRate ? 1 / coinGeckoRate : coinGeckoRate;
+	const displayCoinbaseRate = inverted && coinbaseRate ? 1 / coinbaseRate : coinbaseRate;
+	const displayBnmRate = inverted && bnmMiddleRate ? 1 / bnmMiddleRate : bnmMiddleRate;
+
 	return (
 		<CardContent className="mt-4 flex flex-wrap justify-center gap-2">
-			{coinGeckoRate ? (
+			{displayCoinGeckoRate ? (
 				<Tooltip>
 					<TooltipTrigger asChild>
 						<a
@@ -54,7 +60,7 @@ const ExternalRatesBadges = memo(function ExternalRatesBadges({
 									<AvatarFallback>CG</AvatarFallback>
 								</Avatar>
 								<span className="text-sm font-medium">
-									{formatRate(coinGeckoRate)}
+									{formatRate(displayCoinGeckoRate)}
 								</span>
 								{coinGeckoDiff !== null && (
 									<span
@@ -77,7 +83,7 @@ const ExternalRatesBadges = memo(function ExternalRatesBadges({
 			) : loading ? (
 				<Skeleton className="h-8 w-24" />
 			) : null}
-			{coinbaseRate ? (
+			{displayCoinbaseRate ? (
 				<Tooltip>
 					<TooltipTrigger asChild>
 						<a
@@ -94,7 +100,7 @@ const ExternalRatesBadges = memo(function ExternalRatesBadges({
 									<AvatarFallback>CB</AvatarFallback>
 								</Avatar>
 								<span className="text-sm font-medium">
-									{formatRate(coinbaseRate)}
+									{formatRate(displayCoinbaseRate)}
 								</span>
 								{coinbaseDiff !== null && (
 									<span
@@ -117,7 +123,7 @@ const ExternalRatesBadges = memo(function ExternalRatesBadges({
 			) : loading ? (
 				<Skeleton className="h-8 w-24" />
 			) : null}
-			{bnmMiddleRate !== null && bnmMiddleRate !== undefined ? (
+			{displayBnmRate !== null && displayBnmRate !== undefined ? (
 				<Tooltip>
 					<TooltipTrigger asChild>
 						<a
@@ -134,7 +140,7 @@ const ExternalRatesBadges = memo(function ExternalRatesBadges({
 									<AvatarFallback>BNM</AvatarFallback>
 								</Avatar>
 								<span className="text-sm font-medium">
-									{formatRate(bnmMiddleRate)}
+									{formatRate(displayBnmRate)}
 								</span>
 								{bnmDiff !== null && (
 									<span
