@@ -30,7 +30,7 @@ const ExchangeRateChart = dynamic(
 	{
 		loading: () => <Skeleton className="h-64 w-full" />,
 		ssr: false,
-	}
+	},
 );
 import { RefreshCw, ChartSpline } from "lucide-react";
 
@@ -58,7 +58,7 @@ export default function Home() {
 	const [bnmDiff, setBnmDiff] = useState<number | null>(null);
 	const [hasError, setHasError] = useState(false);
 	const [historicalRates, setHistoricalRates] = useState<HistoricalRate[]>(
-		[]
+		[],
 	);
 	const [showChart, setShowChart] = useState(false);
 
@@ -81,22 +81,22 @@ export default function Home() {
 			// Fetch source platform price
 			if (sourcePlatform === "luno") {
 				sourceData = await fetchLunoPrice(
-					`${cryptoAsset.toUpperCase()}MYR`
+					`${cryptoAsset.toUpperCase()}MYR`,
 				);
 			} else {
 				sourceData = await fetchHataPrice(
-					`${cryptoAsset.toUpperCase()}MYR`
+					`${cryptoAsset.toUpperCase()}MYR`,
 				);
 			}
 
 			// Fetch target platform price
 			if (targetPlatform === "binance") {
 				targetData = await fetchBinancePrice(
-					`${cryptoAsset.toUpperCase()}USDT`
+					`${cryptoAsset.toUpperCase()}USDT`,
 				);
 			} else {
 				targetData = await fetchHuobiPrice(
-					`${cryptoAsset.toLowerCase()}usdt`
+					`${cryptoAsset.toLowerCase()}usdt`,
 				);
 			}
 
@@ -147,9 +147,7 @@ export default function Home() {
 					return downsampleHistoricalRates(updated, now);
 				});
 			} else {
-				throw new Error(
-					"Could not fetch prices for both platforms."
-				);
+				throw new Error("Could not fetch prices for both platforms.");
 			}
 
 			// Fetch external rates concurrently
@@ -164,15 +162,15 @@ export default function Home() {
 			setCoinGeckoRate(
 				coingeckoResult.status === "fulfilled"
 					? coingeckoResult.value
-					: null
+					: null,
 			);
 			setCoinbaseRate(
 				coinbaseResult.status === "fulfilled"
 					? coinbaseResult.value
-					: null
+					: null,
 			);
 			setBnmRate(
-				bnmResult.status === "fulfilled" ? bnmResult.value : null
+				bnmResult.status === "fulfilled" ? bnmResult.value : null,
 			);
 		} catch (err: unknown) {
 			setHasError(true);
@@ -183,19 +181,39 @@ export default function Home() {
 						: "An unknown error occurred.",
 			});
 		} finally {
+			refreshStartRef.current = Date.now();
+			setProgress(0);
 			setLoading(false);
 		}
 	}, [sourcePlatform, targetPlatform, cryptoAsset]);
 
 	// Auto-fetch on mount and schedule periodic refresh
+	const refreshStartRef = useRef<number>(Date.now());
+
 	useEffect(() => {
 		calculateExchangeRate();
 		const refreshInterval = setInterval(
 			calculateExchangeRate,
-			AUTO_REFRESH_INTERVAL
+			AUTO_REFRESH_INTERVAL,
 		);
 		return () => clearInterval(refreshInterval);
 	}, [calculateExchangeRate]);
+
+	// Progress timer - uses ref only, no timestamp state
+	const [progress, setProgress] = useState(0);
+
+	useEffect(() => {
+		const interval = setInterval(() => {
+			const elapsed = Date.now() - refreshStartRef.current;
+			const p = Math.min(elapsed / AUTO_REFRESH_INTERVAL, 1);
+			setProgress(p);
+			if (p >= 1) {
+				refreshStartRef.current = Date.now();
+			}
+		}, 50);
+
+		return () => clearInterval(interval);
+	}, []);
 
 	// Animate rate changes
 	useEffect(() => {
@@ -232,30 +250,24 @@ export default function Home() {
 
 		const baseRate = exchangeRateDetails.rate;
 		setCoinGeckoDiff(
-			coinGeckoRate ? ((coinGeckoRate - baseRate) / baseRate) * 100 : null
+			coinGeckoRate
+				? ((coinGeckoRate - baseRate) / baseRate) * 100
+				: null,
 		);
 		setCoinbaseDiff(
-			coinbaseRate ? ((coinbaseRate - baseRate) / baseRate) * 100 : null
+			coinbaseRate ? ((coinbaseRate - baseRate) / baseRate) * 100 : null,
 		);
 		setBnmDiff(
 			bnmRate?.rate.middle_rate
 				? ((bnmRate.rate.middle_rate - baseRate) / baseRate) * 100
-				: null
+				: null,
 		);
-	}, [
-		exchangeRateDetails,
-		coinGeckoRate,
-		coinbaseRate,
-		bnmRate,
-	]);
+	}, [exchangeRateDetails, coinGeckoRate, coinbaseRate, bnmRate]);
 
 	// Memoized derived values
 	const canShowChart = historicalRates.length > 1;
 
-	const chartProps = useMemo(
-		() => ({ historicalRates }),
-		[historicalRates]
-	);
+	const chartProps = useMemo(() => ({ historicalRates }), [historicalRates]);
 
 	const detailsDialogProps = useMemo(
 		() => ({
@@ -264,7 +276,7 @@ export default function Home() {
 			cryptoAsset,
 			className: "flex-1",
 		}),
-		[exchangeRateDetails, loading, cryptoAsset]
+		[exchangeRateDetails, loading, cryptoAsset],
 	);
 
 	const badgesProps = useMemo(
@@ -285,7 +297,7 @@ export default function Home() {
 			bnmRate,
 			bnmDiff,
 			loading,
-		]
+		],
 	);
 
 	const selectorsProps = useMemo(
@@ -297,7 +309,7 @@ export default function Home() {
 			cryptoAsset,
 			setCryptoAsset,
 		}),
-		[sourcePlatform, targetPlatform, cryptoAsset]
+		[sourcePlatform, targetPlatform, cryptoAsset],
 	);
 
 	const displayProps = useMemo(
@@ -307,7 +319,7 @@ export default function Home() {
 			hasError,
 			rateChangeAnimation,
 		}),
-		[exchangeRateDetails, loading, hasError, rateChangeAnimation]
+		[exchangeRateDetails, loading, hasError, rateChangeAnimation],
 	);
 
 	return (
@@ -341,19 +353,28 @@ export default function Home() {
 					)}
 					<Button
 						onClick={calculateExchangeRate}
-						className="flex-1"
+						className="relative flex-1 overflow-hidden"
 						disabled={
 							loading || (!exchangeRateDetails && !hasError)
 						}
 						aria-label="Refresh exchange rate"
 					>
-						<RefreshCw
-							className={
-								loading
-									? "h-4 w-4 animate-spin-slow"
-									: "h-4 w-4"
-							}
+						<div
+							className="absolute inset-0 opacity-20 transition-all duration-75 ease-linear"
+							style={{
+								width: `${progress * 100}%`,
+								backgroundColor: "currentColor",
+							}}
 						/>
+						<span className="relative z-10 flex items-center justify-center">
+							<RefreshCw
+								className={
+									loading
+										? "h-4 w-4 animate-spin-slow"
+										: "h-4 w-4"
+								}
+							/>
+						</span>
 					</Button>
 				</CardFooter>
 			</Card>
