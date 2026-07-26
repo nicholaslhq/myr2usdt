@@ -29,7 +29,11 @@ const BINANCE_FALLBACK_URLS = [
 	"https://api1.binance.com",
 	"https://api2.binance.com",
 	"https://api3.binance.com",
-	"https://binance.hgfaemonic.net",
+	"https://api4.binance.com",
+	"https://api-gcp.binance.com",
+	"https://api.binance.us",
+	"https://testnet.binance.vision",
+	"https://data-api.binance.vision",
 ];
 
 export const dynamic = "force-dynamic";
@@ -37,7 +41,7 @@ export const revalidate = 30;
 
 export async function GET(
 	request: Request,
-	{ params }: { params: Promise<{ symbol: string }> }
+	{ params }: { params: Promise<{ symbol: string }> },
 ) {
 	const { symbol } = await params;
 	const upperCaseSymbol = symbol.toUpperCase();
@@ -54,13 +58,16 @@ export async function GET(
 		if (data && data.symbol) {
 			return NextResponse.json(data);
 		}
-		
+
 		return NextResponse.json(
 			{ error: "Binance API returned unexpected or empty data." },
-			{ status: 502 }
+			{ status: 502 },
 		);
 	} catch (error: unknown) {
-		console.error(`[Binance API] Error fetching ${upperCaseSymbol}:`, error);
+		console.error(
+			`[Binance API] Error fetching ${upperCaseSymbol}:`,
+			error,
+		);
 		return NextResponse.json(
 			{
 				error: `Failed to fetch Binance price: ${
@@ -69,7 +76,7 @@ export async function GET(
 						: "An unknown error occurred"
 				}`,
 			},
-			{ status: 500 }
+			{ status: 500 },
 		);
 	}
 }
