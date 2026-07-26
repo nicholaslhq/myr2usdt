@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { fetcher } from "@/lib/api";
+import { fetchExternalWithPrefix } from "@/lib/api";
 
 export interface HuobiApiResponse {
 	ch: string;
@@ -29,16 +29,9 @@ export async function GET(
 	const { symbol } = await params;
 	try {
 		const lowerCaseSymbol = symbol.toLowerCase();
-		const data = await fetcher<HuobiApiResponse>(
+		const data = await fetchExternalWithPrefix<HuobiApiResponse>(
 			`https://api.huobi.pro/market/detail/merged?symbol=${lowerCaseSymbol}`,
 			"Huobi API error",
-			{
-				headers: {
-					"User-Agent":
-						"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-					Accept: "application/json",
-				},
-			}
 		);
 
 		if (data && data.tick) {

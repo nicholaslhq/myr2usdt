@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { fetcher } from "@/lib/api";
+import { fetchExternalWithPrefix } from "@/lib/api";
 
 export interface HataExchangeInfoData {
 	base: string;
@@ -29,27 +29,16 @@ export async function GET(
 	const upperCasePair = pair.toUpperCase();
 
 	try {
-		// Fetch exchange info and order book concurrently
-		const commonHeaders = {
-			headers: {
-				"User-Agent":
-					"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-				Accept: "application/json",
-			},
-		};
-
 		const [exchangeInfoResponse, orderBookResponse] = await Promise.all([
-			fetcher<{
+			fetchExternalWithPrefix<{
 				data: HataExchangeInfoData[];
 			}>(
 				"https://my-api.hata.io/orderbook/api/v2/exchange-info",
-				"Hata Exchange Info API error",
-				commonHeaders
+				"Hata Exchange Info API error"
 			),
-			fetcher<{ data: HataOrderBookData }>(
+			fetchExternalWithPrefix<{ data: HataOrderBookData }>(
 				`https://my-api.hata.io/orderbook/api/orderbook?pair_name=${upperCasePair}`,
-				"Hata Order Book API error",
-				commonHeaders
+				"Hata Order Book API error"
 			),
 		]);
 

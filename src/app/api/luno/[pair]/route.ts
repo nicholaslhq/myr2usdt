@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { fetcher } from "@/lib/api";
+import { fetchExternalWithPrefix } from "@/lib/api";
 
 export interface LunoApiResponse {
 	pair: string;
@@ -20,16 +20,9 @@ export async function GET(
 	const { pair } = await params;
 	const upperCasePair = pair.toUpperCase();
 	try {
-		const data = await fetcher<LunoApiResponse>(
+		const data = await fetchExternalWithPrefix<LunoApiResponse>(
 			`https://api.luno.com/api/1/ticker?pair=${upperCasePair}`,
 			"Luno API error",
-			{
-				headers: {
-					"User-Agent":
-						"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-					Accept: "application/json",
-				},
-			}
 		);
 
 		if (data && data.pair) {

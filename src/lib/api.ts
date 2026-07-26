@@ -48,6 +48,81 @@ async function withRetry<T>(fn: () => Promise<T>): Promise<T> {
 	throw lastError;
 }
 
+interface FetchExternalOptions extends RequestInit {
+	timeoutMs?: number;
+}
+
+export async function fetchExternal<T>(
+	url: string,
+	options: FetchExternalOptions = {},
+): Promise<T> {
+	const {
+		timeoutMs = FETCH_TIMEOUT_MS,
+		...fetchOptions
+	} = options;
+
+	async function attemptFetch(): Promise<T> {
+		const controller = new AbortController();
+		const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+		try {
+			const response = await fetch(url, {
+				...fetchOptions,
+				signal: controller.signal,
+			});
+
+			if (!response.ok) {
+				throw new Error(
+					`Server-side fetch failed: ${response.statusText} (${response.status})`,
+				);
+			}
+
+			return (await response.json()) as T;
+		} finally {
+			clearTimeout(timeoutId);
+		}
+	}
+
+	return withRetry(attemptFetch);
+}
+
+/**
+ * Fetch with multiple fallback URLs. Tries each URL in sequence until one succeeds.
+ */
+export async function fetchExternalWithFallback<T>(
+	baseUrl: string,
+	path: string,
+	fallbackUrls: string[],
+	errorPrefix: string,
+	options: RequestInit = {},
+): Promise<T> {
+	const allUrls = [baseUrl, ...fallbackUrls];
+	let lastError: unknown;
+
+	for (const url of allUrls) {
+		try {
+			return await fetchExternal<T>(`${url}${path}`, {
+				...options,
+				headers: {
+					"User-Agent":
+						"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+					Accept: "application/json",
+					...options.headers,
+				},
+			});
+		} catch (err) {
+			lastError = err;
+			console.warn(`[${errorPrefix}] Failed: ${url}`, err);
+		}
+	}
+
+	throw new Error(
+		`${errorPrefix}: All endpoints failed (${allUrls.join(", ")}). Last error: ${
+			lastError instanceof Error ? lastError.message : "Unknown error"
+		}`,
+	);
+}
+
 function cachedFetch<T>(
 	url: string,
 	cacheKey: string | null,
@@ -139,72 +214,31 @@ export interface HistoricalRate {
 }
 
 /**
- * Legacy fetcher kept for backward compatibility with API route handlers.
- * For client-side data fetching, prefer cachedFetch above.
+ * Standardized external API fetch with retry, timeout, and consistent error messages.
+ * Replaces the legacy `fetcher` function used across all route handlers.
  */
-export async function fetcher<T>(
+export async function fetchExternalWithPrefix<T>(
 	url: string,
-	errorMessage: string,
-	options?: RequestInit,
-	clientFallbackUrl?: string,
-	clientFallbackOptions?: RequestInit,
+	errorPrefix: string,
+	options: RequestInit = {},
 ): Promise<T> {
-	const controller = new AbortController();
-	const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
-
 	try {
-		const response = await fetch(url, {
+		const data = await fetchExternal<T>(url, {
 			...options,
-			signal: controller.signal,
+			headers: {
+				"User-Agent":
+					"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+				Accept: "application/json",
+				...options.headers,
+			},
 		});
-		if (!response.ok) {
-			throw new Error(
-				`${errorMessage}: Server-side fetch failed: ${response.statusText}`,
-			);
-		}
-		const result = (await response.json()) as T;
-		return result;
-	} catch (serverError: unknown) {
-		if (clientFallbackUrl) {
-			const fallbackController = new AbortController();
-			const fallbackTimeoutId = setTimeout(
-				() => fallbackController.abort(),
-				FETCH_TIMEOUT_MS,
-			);
-
-			try {
-				const clientResponse = await fetch(clientFallbackUrl, {
-					...clientFallbackOptions,
-					signal: fallbackController.signal,
-				});
-				if (!clientResponse.ok) {
-					throw new Error(
-						`${errorMessage}: Client-side fetch failed: ${clientResponse.statusText}`,
-					);
-				}
-				const clientResult = (await clientResponse.json()) as T;
-				return clientResult;
-			} catch (clientError: unknown) {
-				throw new Error(
-					`${errorMessage}: Failed to fetch data from both server and client: ${
-						clientError instanceof Error
-							? clientError.message
-							: "Unknown error"
-					}`,
-				);
-			} finally {
-				clearTimeout(fallbackTimeoutId);
-			}
-		}
+		return data;
+	} catch (error: unknown) {
 		throw new Error(
-			`${errorMessage}: Failed to fetch data from server: ${
-				serverError instanceof Error
-					? serverError.message
-					: "Unknown error"
+			`${errorPrefix}: Failed to fetch data from server: ${
+				error instanceof Error ? error.message : "Unknown error"
 			}`,
 		);
-	} finally {
-		clearTimeout(timeoutId);
 	}
 }
 

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { fetcher } from "@/lib/api";
+import { fetchExternalWithPrefix } from "@/lib/api";
 
 export interface BnmExchangeRate {
 	currency_code: string;
@@ -26,7 +26,7 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
 	try {
-		const data = await fetcher<BnmApiResponse>(
+		const data = await fetchExternalWithPrefix<BnmApiResponse>(
 			"https://api.bnm.gov.my/public/exchange-rate",
 			"BNM API error",
 			{

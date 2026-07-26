@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { fetcher } from "@/lib/api";
+import { fetchExternalWithFallback } from "@/lib/api";
 
 export interface BinanceApiResponse {
 	symbol: string;
@@ -25,7 +25,15 @@ export interface BinanceApiResponse {
 	count: number;
 }
 
+const BINANCE_FALLBACK_URLS = [
+	"https://api1.binance.com",
+	"https://api2.binance.com",
+	"https://api3.binance.com",
+	"https://binance.hgfaemonic.net",
+];
+
 export const dynamic = "force-dynamic";
+export const revalidate = 30;
 
 export async function GET(
 	request: Request,
@@ -33,28 +41,26 @@ export async function GET(
 ) {
 	const { symbol } = await params;
 	const upperCaseSymbol = symbol.toUpperCase();
+	const path = `/api/v3/ticker/24hr?symbol=${upperCaseSymbol}`;
+
 	try {
-		const data = await fetcher<BinanceApiResponse>(
-			`https://api.binance.com/api/v3/ticker/24hr?symbol=${upperCaseSymbol}`,
+		const data = await fetchExternalWithFallback<BinanceApiResponse>(
+			"https://api.binance.com",
+			path,
+			BINANCE_FALLBACK_URLS,
 			"Binance API error",
-			{
-				headers: {
-					"User-Agent":
-						"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-					Accept: "application/json",
-				},
-			}
 		);
 
 		if (data && data.symbol) {
 			return NextResponse.json(data);
-		} else {
-			return NextResponse.json(
-				{ error: "Binance API returned unexpected or empty data." },
-				{ status: 502 }
-			);
 		}
+		
+		return NextResponse.json(
+			{ error: "Binance API returned unexpected or empty data." },
+			{ status: 502 }
+		);
 	} catch (error: unknown) {
+		console.error(`[Binance API] Error fetching ${upperCaseSymbol}:`, error);
 		return NextResponse.json(
 			{
 				error: `Failed to fetch Binance price: ${
