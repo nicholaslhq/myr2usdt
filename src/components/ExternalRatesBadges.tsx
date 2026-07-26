@@ -37,9 +37,12 @@ const ExternalRatesBadges = memo(function ExternalRatesBadges({
 }: ExternalRatesBadgesProps) {
 	const bnmMiddleRate = bnmRate?.rate.middle_rate;
 
-	const displayCoinGeckoRate = inverted && coinGeckoRate ? 1 / coinGeckoRate : coinGeckoRate;
-	const displayCoinbaseRate = inverted && coinbaseRate ? 1 / coinbaseRate : coinbaseRate;
-	const displayBnmRate = inverted && bnmMiddleRate ? 1 / bnmMiddleRate : bnmMiddleRate;
+	const displayCoinGeckoRate =
+		inverted && coinGeckoRate ? 1 / coinGeckoRate : coinGeckoRate;
+	const displayCoinbaseRate =
+		inverted && coinbaseRate ? 1 / coinbaseRate : coinbaseRate;
+	const displayBnmRate =
+		inverted && bnmMiddleRate ? 1 / bnmMiddleRate : bnmMiddleRate;
 
 	return (
 		<CardContent className="mt-4 flex flex-wrap justify-center gap-2">
@@ -77,7 +80,11 @@ const ExternalRatesBadges = memo(function ExternalRatesBadges({
 						</a>
 					</TooltipTrigger>
 					<TooltipContent>
-						<p>CoinGecko USDT/MYR price</p>
+						<p>
+							{inverted
+								? "CoinGecko MYR/USDT price"
+								: "CoinGecko USDT/MYR price"}
+						</p>
 					</TooltipContent>
 				</Tooltip>
 			) : loading ? (
@@ -117,7 +124,11 @@ const ExternalRatesBadges = memo(function ExternalRatesBadges({
 						</a>
 					</TooltipTrigger>
 					<TooltipContent>
-						<p>Coinbase USDT/MYR price</p>
+						<p>
+							{inverted
+								? "Coinbase MYR/USDT price"
+								: "Coinbase USDT/MYR price"}
+						</p>
 					</TooltipContent>
 				</Tooltip>
 			) : loading ? (
@@ -157,7 +168,11 @@ const ExternalRatesBadges = memo(function ExternalRatesBadges({
 						</a>
 					</TooltipTrigger>
 					<TooltipContent>
-						<p>Bank Negara Malaysia USD/MYR middle rate</p>
+						<p>
+							{inverted
+								? "Bank Negara Malaysia MYR/USD middle rate"
+								: "Bank Negara Malaysia USD/MYR middle rate"}
+						</p>
 					</TooltipContent>
 				</Tooltip>
 			) : loading ? (

@@ -276,8 +276,9 @@ export default function Home() {
 			loading,
 			cryptoAsset,
 			className: "flex-1 cursor-pointer",
+			inverted,
 		}),
-		[exchangeRateDetails, loading, cryptoAsset],
+		[exchangeRateDetails, loading, cryptoAsset, inverted],
 	);
 
 	const badgesProps = useMemo(

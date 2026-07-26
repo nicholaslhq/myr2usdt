@@ -13,7 +13,7 @@ export default function AppHeader({
 	inverted,
 	onToggleInversion,
 }: AppHeaderProps) {
-	const title = inverted ? "USDT2MYR" : "MYR2USDT";
+	const title = "MYR2USDT";
 
 	const handleToggle = useCallback(() => {
 		onToggleInversion();
@@ -44,7 +44,9 @@ export default function AppHeader({
 							src="/favicon/favicon.svg"
 							alt={`${title} Logo`}
 						/>
-						<AvatarFallback>{inverted ? "U2M" : "M2U"}</AvatarFallback>
+						<AvatarFallback>
+							{inverted ? "U2M" : "M2U"}
+						</AvatarFallback>
 					</Avatar>
 				</div>
 				<span>{title}</span>

@@ -53,6 +53,7 @@ interface ExchangeDetailsDialogProps {
 	loading: boolean;
 	cryptoAsset: string;
 	className?: string;
+	inverted: boolean;
 }
 
 function formatRate(val: number | undefined | null): string {
@@ -152,7 +153,11 @@ const ExchangeDetailsDialog = memo(function ExchangeDetailsDialog({
 	loading,
 	cryptoAsset,
 	className,
+	inverted,
 }: ExchangeDetailsDialogProps) {
+	const sourceCurrency = inverted ? "USDT" : "MYR";
+	const targetCurrency = inverted ? "MYR" : "USDT";
+
 	return (
 		<Dialog>
 			<DialogTrigger asChild>
@@ -190,7 +195,7 @@ const ExchangeDetailsDialog = memo(function ExchangeDetailsDialog({
 							<PlatformSection
 								label="Source"
 								data={exchangeRateDetails.source}
-								currency="MYR"
+								currency={sourceCurrency}
 								asset={cryptoAsset}
 							/>
 						</div>
@@ -201,7 +206,7 @@ const ExchangeDetailsDialog = memo(function ExchangeDetailsDialog({
 							<PlatformSection
 								label="Target"
 								data={exchangeRateDetails.target}
-								currency="USDT"
+								currency={targetCurrency}
 								asset={cryptoAsset}
 							/>
 						</div>
