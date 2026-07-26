@@ -38,7 +38,7 @@ export default function PlatformAssetSelectors({
 				<SelectTrigger
 					id="source-platform"
 					aria-label="Select source platform"
-					className="flex-1"
+					className="flex-1 cursor-pointer"
 				>
 					<SelectValue placeholder="Source" />
 				</SelectTrigger>
@@ -62,7 +62,7 @@ export default function PlatformAssetSelectors({
 				<SelectTrigger
 					id="target-platform"
 					aria-label="Select target platform"
-					className="flex-1"
+					className="flex-1 cursor-pointer"
 				>
 					<SelectValue placeholder="Target" />
 				</SelectTrigger>
@@ -86,7 +86,7 @@ export default function PlatformAssetSelectors({
 				<SelectTrigger
 					id="crypto-asset"
 					aria-label="Select crypto asset"
-					className="flex-1"
+					className="flex-1 cursor-pointer"
 				>
 					<SelectValue placeholder="Asset" />
 				</SelectTrigger>

@@ -274,7 +274,7 @@ export default function Home() {
 			exchangeRateDetails,
 			loading,
 			cryptoAsset,
-			className: "flex-1",
+			className: "flex-1 cursor-pointer",
 		}),
 		[exchangeRateDetails, loading, cryptoAsset],
 	);
@@ -345,7 +345,7 @@ export default function Home() {
 						{canShowChart && (
 							<Button
 								onClick={() => setShowChart(!showChart)}
-								className="flex-1"
+								className="flex-1 cursor-pointer"
 								variant={showChart ? "secondary" : "outline"}
 								aria-label="Toggle chart visibility"
 							>
@@ -355,7 +355,7 @@ export default function Home() {
 					</div>
 					<Button
 						onClick={calculateExchangeRate}
-						className="relative flex-1 overflow-hidden"
+						className="relative flex-1 overflow-hidden cursor-pointer"
 						disabled={
 							loading || (!exchangeRateDetails && !hasError)
 						}
