@@ -61,28 +61,23 @@ const ConversionCalculatorDialog = memo(function ConversionCalculatorDialog({
 	// baseRate = MYR per USDT (1 USDT = baseRate MYR)
 	// MYR → USDT = MYR / baseRate
 	// USDT → MYR = USDT * baseRate
+	const isInputMyr = (inputCurrency === "source" && !inverted) || (inputCurrency === "target" && inverted);
+	const isInputUsdt = (inputCurrency === "target" && !inverted) || (inputCurrency === "source" && inverted);
+
 	const myrAmount = baseRate
-		? inputCurrency === "source" && !inverted
+		? isInputMyr
 			? sourceAmount
-			: inputCurrency === "target" && inverted
-				? sourceAmount
-				: inputCurrency === "source" && inverted
-					? sourceAmount * baseRate
-					: inputCurrency === "target" && !inverted
-						? sourceAmount / baseRate
-						: 0
+			: isInputUsdt
+			? sourceAmount * baseRate
+			: 0
 		: 0;
 
 	const usdtAmount = baseRate
-		? inputCurrency === "target" && !inverted
+		? isInputUsdt
 			? sourceAmount
-			: inputCurrency === "source" && inverted
-				? sourceAmount
-				: inputCurrency === "target" && inverted
-					? sourceAmount / baseRate
-					: inputCurrency === "source" && !inverted
-						? sourceAmount * baseRate
-						: 0
+			: isInputMyr
+			? sourceAmount / baseRate
+			: 0
 		: 0;
 
 	const displaySourceAmount = inverted ? usdtAmount : myrAmount;
