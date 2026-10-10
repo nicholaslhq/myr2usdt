@@ -9,7 +9,7 @@ import {
 	DialogClose,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Calculator } from "lucide-react";
+import { Calculator, ArrowLeftRight } from "lucide-react";
 import { ExchangeRateDetails } from "@/lib/api";
 import React, { memo, useState } from "react";
 
@@ -35,7 +35,9 @@ const ConversionCalculatorDialog = memo(function ConversionCalculatorDialog({
 	inverted,
 }: ConversionCalculatorDialogProps) {
 	const [inputValue, setInputValue] = useState("");
-	const [inputCurrency, setInputCurrency] = useState<"source" | "target">("source");
+	const [inputCurrency, setInputCurrency] = useState<"source" | "target">(
+		"source",
+	);
 
 	const rate = exchangeRateDetails?.rate;
 	const sourceCurrency = inverted ? "USDT" : "MYR";
@@ -60,19 +62,27 @@ const ConversionCalculatorDialog = memo(function ConversionCalculatorDialog({
 	// MYR → USDT = MYR / baseRate
 	// USDT → MYR = USDT * baseRate
 	const myrAmount = baseRate
-		? inputCurrency === "source" && !inverted ? sourceAmount
-		: inputCurrency === "target" && inverted ? sourceAmount
-		: inputCurrency === "source" && inverted ? sourceAmount * baseRate
-		: inputCurrency === "target" && !inverted ? sourceAmount / baseRate
-		: 0
+		? inputCurrency === "source" && !inverted
+			? sourceAmount
+			: inputCurrency === "target" && inverted
+				? sourceAmount
+				: inputCurrency === "source" && inverted
+					? sourceAmount * baseRate
+					: inputCurrency === "target" && !inverted
+						? sourceAmount / baseRate
+						: 0
 		: 0;
 
 	const usdtAmount = baseRate
-		? inputCurrency === "target" && !inverted ? sourceAmount
-		: inputCurrency === "source" && inverted ? sourceAmount
-		: inputCurrency === "target" && inverted ? sourceAmount / baseRate
-		: inputCurrency === "source" && !inverted ? sourceAmount * baseRate
-		: 0
+		? inputCurrency === "target" && !inverted
+			? sourceAmount
+			: inputCurrency === "source" && inverted
+				? sourceAmount
+				: inputCurrency === "target" && inverted
+					? sourceAmount / baseRate
+					: inputCurrency === "source" && !inverted
+						? sourceAmount * baseRate
+						: 0
 		: 0;
 
 	const displaySourceAmount = inverted ? usdtAmount : myrAmount;
@@ -97,7 +107,8 @@ const ConversionCalculatorDialog = memo(function ConversionCalculatorDialog({
 				<DialogHeader>
 					<DialogTitle>Conversion Calculator</DialogTitle>
 					<DialogDescription>
-						Calculate converted amounts using the current exchange rate.
+						Calculate converted amounts using the current exchange
+						rate.
 					</DialogDescription>
 				</DialogHeader>
 				{loading && !exchangeRateDetails ? (
@@ -109,21 +120,22 @@ const ConversionCalculatorDialog = memo(function ConversionCalculatorDialog({
 				) : exchangeRateDetails ? (
 					<div className="grid gap-4 py-4">
 						<div className="space-y-4">
-							<div className="grid grid-cols-2 gap-4">
+							<div className="grid grid-cols-[1fr_auto_1fr] gap-4">
 								<label
 									htmlFor="source-amount"
-									className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+									className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-center"
 								>
-									{sourceCurrency} Amount
+									{sourceCurrency}
 								</label>
+								<div className="w-5" aria-hidden="true" />
 								<label
 									htmlFor="target-amount"
-									className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+									className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-center"
 								>
-									{targetCurrency} Amount
+									{targetCurrency}
 								</label>
 							</div>
-							<div className="grid grid-cols-2 gap-4">
+							<div className="grid grid-cols-[1fr_auto_1fr] gap-4 items-center">
 								<input
 									id="source-amount"
 									type="number"
@@ -132,7 +144,9 @@ const ConversionCalculatorDialog = memo(function ConversionCalculatorDialog({
 									value={
 										inputCurrency === "source"
 											? inputValue
-											: formatCurrency(displaySourceAmount)
+											: formatCurrency(
+													displaySourceAmount,
+												)
 									}
 									onChange={(e) => {
 										setInputCurrency("source");
@@ -142,6 +156,10 @@ const ConversionCalculatorDialog = memo(function ConversionCalculatorDialog({
 									disabled={!baseRate}
 									className={inputClassName}
 								/>
+								<ArrowLeftRight
+									className="h-5 w-5 text-muted-foreground flex-shrink-0"
+									aria-hidden="true"
+								/>
 								<input
 									id="target-amount"
 									type="number"
@@ -150,7 +168,9 @@ const ConversionCalculatorDialog = memo(function ConversionCalculatorDialog({
 									value={
 										inputCurrency === "target"
 											? inputValue
-											: formatCurrency(displayTargetAmount)
+											: formatCurrency(
+													displayTargetAmount,
+												)
 									}
 									onChange={(e) => {
 										setInputCurrency("target");
