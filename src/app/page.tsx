@@ -22,6 +22,7 @@ import ExchangeRateDisplay from "@/components/ExchangeRateDisplay";
 import ExternalRatesBadges from "@/components/ExternalRatesBadges";
 import PlatformAssetSelectors from "@/components/PlatformAssetSelectors";
 import ExchangeDetailsDialog from "@/components/ExchangeDetailsDialog";
+import ConversionCalculatorDialog from "@/components/ConversionCalculatorDialog";
 import dynamic from "next/dynamic";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -281,6 +282,16 @@ export default function Home() {
 		[exchangeRateDetails, loading, cryptoAsset, inverted],
 	);
 
+	const conversionCalculatorProps = useMemo(
+		() => ({
+			exchangeRateDetails,
+			loading,
+			className: "flex-1 cursor-pointer",
+			inverted,
+		}),
+		[exchangeRateDetails, loading, inverted],
+	);
+
 	const badgesProps = useMemo(
 		() => ({
 			coinGeckoRate,
@@ -347,6 +358,7 @@ export default function Home() {
 				<CardFooter className="flex w-full items-center gap-2">
 					<div className="flex w-1/2 gap-2">
 						<ExchangeDetailsDialog {...detailsDialogProps} />
+						<ConversionCalculatorDialog {...conversionCalculatorProps} />
 						{canShowChart && (
 							<Button
 								onClick={() => setShowChart(!showChart)}
