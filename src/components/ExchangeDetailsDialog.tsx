@@ -155,8 +155,8 @@ const ExchangeDetailsDialog = memo(function ExchangeDetailsDialog({
 	className,
 	inverted,
 }: ExchangeDetailsDialogProps) {
-	const sourceCurrency = inverted ? "USDT" : "MYR";
-	const targetCurrency = inverted ? "MYR" : "USDT";
+	const sourceCurrency = "MYR";
+	const targetCurrency = "USDT";
 
 	return (
 		<Dialog>
