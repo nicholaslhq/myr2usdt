@@ -960,9 +960,9 @@ const ConversionCalculatorDialog = memo(function ConversionCalculatorDialog({
 												%)
 											</span>
 											<span>
-												{isInputMyr
-													? `${formatCurrency(feeCalculation.totalFeesMyr)} MYR (${formatCurrency(feeCalculation.totalFeesUsdt)} USDT)`
-													: `${formatCurrency(feeCalculation.totalFeesUsdt)} USDT (${formatCurrency(feeCalculation.totalFeesMyr)} MYR)`}
+												{inverted
+													? `${formatCurrency(feeCalculation.totalFeesUsdt)} USDT (${formatCurrency(feeCalculation.totalFeesMyr)} MYR)`
+													: `${formatCurrency(feeCalculation.totalFeesMyr)} MYR (${formatCurrency(feeCalculation.totalFeesUsdt)} USDT)`}
 											</span>
 										</div>
 										<div className="flex justify-between border-t pt-2 font-bold text-green-600 dark:text-green-400">
