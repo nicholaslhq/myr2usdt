@@ -288,6 +288,7 @@ export default function Home() {
 			loading,
 			className: "flex-1 cursor-pointer",
 			inverted,
+			onToggleInversion: () => setInverted(!inverted),
 		}),
 		[exchangeRateDetails, loading, inverted],
 	);

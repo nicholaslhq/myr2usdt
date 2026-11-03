@@ -25,13 +25,14 @@ import {
 	RotateCcw,
 } from "lucide-react";
 import { ExchangeRateDetails } from "@/lib/api";
-import React, { memo, useState, useMemo, useEffect } from "react";
+import React, { memo, useState, useMemo, useEffect, useCallback } from "react";
 
 interface ConversionCalculatorDialogProps {
 	exchangeRateDetails: ExchangeRateDetails | null;
 	loading: boolean;
 	className?: string;
 	inverted: boolean;
+	onToggleInversion?: () => void;
 }
 
 type FeeType = "fixed" | "percentage";
@@ -126,6 +127,7 @@ const ConversionCalculatorDialog = memo(function ConversionCalculatorDialog({
 	loading,
 	className,
 	inverted,
+	onToggleInversion,
 }: ConversionCalculatorDialogProps) {
 	const [inputValue, setInputValue] = useState("1000");
 	const [inputCurrency, setInputCurrency] = useState<"source" | "target">(
@@ -142,6 +144,20 @@ const ConversionCalculatorDialog = memo(function ConversionCalculatorDialog({
 	const sourceCurrency = inverted ? "USDT" : "MYR";
 	const targetCurrency = inverted ? "MYR" : "USDT";
 	const baseRate = rate;
+
+	const handleSwapDirection = useCallback(() => {
+		setInputCurrency((prev) => (prev === "source" ? "target" : "source"));
+		onToggleInversion?.();
+	}, [onToggleInversion]);
+
+	const arrowSwapStyle = useMemo(
+		() => ({
+			transform:
+				inputCurrency === "target" ? "rotate(180deg)" : "rotate(0deg)",
+			transition: "transform 0.3s ease",
+		}),
+		[inputCurrency],
+	);
 
 	useEffect(() => {
 		if (dialogOpen && !inverted) {
@@ -501,10 +517,20 @@ const ConversionCalculatorDialog = memo(function ConversionCalculatorDialog({
 									placeholder="0.00"
 									disabled={!baseRate}
 								/>
-								<ArrowLeftRight
-									className="h-5 w-5 text-muted-foreground flex-shrink-0"
-									aria-hidden="true"
-								/>
+								<Button
+									variant="ghost"
+									size="icon"
+									className="h-8 w-8 cursor-pointer rounded-full hover:bg-gray-200"
+									onClick={handleSwapDirection}
+									aria-label="Swap conversion direction"
+									disabled={!baseRate}
+								>
+									<ArrowLeftRight
+										className="h-5 w-5 text-muted-foreground"
+										style={arrowSwapStyle}
+										aria-hidden="true"
+									/>
+								</Button>
 								<Input
 									id="target-amount"
 									type="number"
