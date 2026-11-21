@@ -214,7 +214,7 @@ const ExchangeDetailsDialog = memo(function ExchangeDetailsDialog({
 				) : null}
 				<DialogFooter>
 					<DialogClose asChild>
-						<Button type="button">Close</Button>
+						<Button type="button" className="cursor-pointer">Close</Button>
 					</DialogClose>
 				</DialogFooter>
 			</DialogContent>

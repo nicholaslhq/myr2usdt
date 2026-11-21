@@ -1046,7 +1046,7 @@ const ConversionCalculatorDialog = memo(function ConversionCalculatorDialog({
 				) : null}
 				<DialogFooter>
 					<DialogClose asChild>
-						<Button type="button">Close</Button>
+						<Button type="button" className="cursor-pointer">Close</Button>
 					</DialogClose>
 				</DialogFooter>
 			</DialogContent>
