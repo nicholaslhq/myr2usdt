@@ -501,7 +501,7 @@ const ConversionCalculatorDialog = memo(function ConversionCalculatorDialog({
 								<Input
 									id="source-amount"
 									type="number"
-									step="0.01"
+									step="1"
 									min="0"
 									value={
 										inputCurrency === "source"
@@ -534,7 +534,7 @@ const ConversionCalculatorDialog = memo(function ConversionCalculatorDialog({
 								<Input
 									id="target-amount"
 									type="number"
-									step="0.01"
+									step="1"
 									min="0"
 									value={
 										inputCurrency === "target"
@@ -1022,7 +1022,7 @@ const ConversionCalculatorDialog = memo(function ConversionCalculatorDialog({
 											(
 											{baseRate
 												? Math.abs(
-														((inverted
+														(((inverted
 															? feeCalculation.usdtAfterFees /
 																sourceAmountInput
 															: sourceAmountInput /
@@ -1032,7 +1032,7 @@ const ConversionCalculatorDialog = memo(function ConversionCalculatorDialog({
 																: baseRate)) /
 															(inverted
 																? 1 / baseRate
-																: baseRate) *
+																: baseRate)) *
 															100,
 													).toFixed(2)
 												: "0.00"}
