@@ -67,52 +67,55 @@ export default function Home() {
 		"calculator" | "details" | null
 	>(null);
 
-	const togglePin = useCallback((which: "calculator" | "details") => {
-		setPinnedDialog((prev) => (prev === which ? null : which));
-	}, []);
+const togglePin = useCallback((which: "calculator" | "details") => {
+ 		setPinnedDialog((prev) => (prev === which ? null : which));
+ 	}, []);
 
-	const exchangeRateDetailsRef = useRef(exchangeRateDetails);
-	const prevRateRef = useRef<number | null>(null);
+ 	const exchangeRateDetailsRef = useRef(exchangeRateDetails);
+ 	const prevRateRef = useRef<number | null>(null);
 
-	useEffect(() => {
-		exchangeRateDetailsRef.current = exchangeRateDetails;
-		prevRateRef.current = previousExchangeRate;
-	}, [exchangeRateDetails, previousExchangeRate]);
+ 	useEffect(() => {
+ 		exchangeRateDetailsRef.current = exchangeRateDetails;
+ 	}, [exchangeRateDetails]);
 
-	const calculateExchangeRate = useCallback(async () => {
-		setLoading(true);
-		setHasError(false);
+const calculateExchangeRate = useCallback(async () => {
+ 		if (exchangeRateDetailsRef.current) {
+ 			prevRateRef.current = exchangeRateDetailsRef.current.rate;
+ 		}
 
-		try {
-			let sourceData: MarketDetail;
-			let targetData: MarketDetail;
+ 		setLoading(true);
+ 		setHasError(false);
 
-			// Fetch source platform price
-			if (sourcePlatform === "luno") {
-				sourceData = await fetchLunoPrice(
-					`${cryptoAsset.toUpperCase()}MYR`,
-				);
-			} else {
-				sourceData = await fetchHataPrice(
-					`${cryptoAsset.toUpperCase()}MYR`,
-				);
-			}
+ 		try {
+ 			let sourceData: MarketDetail;
+ 			let targetData: MarketDetail;
 
-			// Fetch target platform price
-			if (targetPlatform === "binance") {
-				targetData = await fetchBinancePrice(
-					`${cryptoAsset.toUpperCase()}USDT`,
-				);
-			} else {
-				targetData = await fetchHuobiPrice(
-					`${cryptoAsset.toLowerCase()}usdt`,
-				);
-			}
+ 			// Fetch source platform price
+ 			if (sourcePlatform === "luno") {
+ 				sourceData = await fetchLunoPrice(
+ 					`${cryptoAsset.toUpperCase()}MYR`,
+ 				);
+ 			} else {
+ 				sourceData = await fetchHataPrice(
+ 					`${cryptoAsset.toUpperCase()}MYR`,
+ 				);
+ 			}
 
-			if (sourceData.price && targetData.price) {
-				const rate = sourceData.price / targetData.price;
-				const prevRate = prevRateRef.current;
-				setPreviousExchangeRate(prevRate);
+ 			// Fetch target platform price
+ 			if (targetPlatform === "binance") {
+ 				targetData = await fetchBinancePrice(
+ 					`${cryptoAsset.toUpperCase()}USDT`,
+ 				);
+ 			} else {
+ 				targetData = await fetchHuobiPrice(
+ 					`${cryptoAsset.toLowerCase()}usdt`,
+ 				);
+ 			}
+
+ 			if (sourceData.price && targetData.price) {
+ 				const rate = sourceData.price / targetData.price;
+ 				const prevRate = prevRateRef.current;
+ 				setPreviousExchangeRate(prevRate);
 
 				const sourceName =
 					sourcePlatform.charAt(0).toUpperCase() +
