@@ -157,6 +157,7 @@ const ExchangeDetailsDialog = memo(function ExchangeDetailsDialog({
 	cryptoAsset,
 	className,
 	mode = "modal",
+	pinned = false,
 	onTogglePin,
 }: ExchangeDetailsDialogProps) {
 	const sourceCurrency = "MYR";
@@ -273,10 +274,14 @@ const ExchangeDetailsDialog = memo(function ExchangeDetailsDialog({
 							setOpen(false);
 							onTogglePin();
 						}}
-						aria-label="Pin exchange details to side"
-						className="absolute top-4 right-12 z-10 h-8 w-8 cursor-pointer rounded-full opacity-70 hover:bg-muted hover:text-foreground hover:opacity-100"
+						aria-label={pinned ? "Unpin exchange details" : "Pin exchange details to side"}
+						className={`absolute top-4 right-12 z-10 h-8 w-8 cursor-pointer rounded-full hover:bg-muted hover:text-foreground hover:opacity-100 ${
+							pinned ? "text-primary opacity-100" : "opacity-70"
+						}`}
 					>
-						<Pin className="h-4 w-4" />
+						<Pin
+							className={`h-4 w-4 ${pinned ? "fill-current" : ""}`}
+						/>
 					</Button>
 				)}
 				{header}

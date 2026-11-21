@@ -285,9 +285,17 @@ export default function Home() {
 			cryptoAsset,
 			className: "flex-1 cursor-pointer",
 			inverted,
+			pinned: pinnedDialog === "details",
 			onTogglePin: () => togglePin("details"),
 		}),
-		[exchangeRateDetails, loading, cryptoAsset, inverted, togglePin],
+		[
+			exchangeRateDetails,
+			loading,
+			cryptoAsset,
+			inverted,
+			pinnedDialog,
+			togglePin,
+		],
 	);
 
 	const conversionCalculatorProps = useMemo(
@@ -296,10 +304,11 @@ export default function Home() {
 			loading,
 			className: "flex-1 cursor-pointer",
 			inverted,
+			pinned: pinnedDialog === "calculator",
 			onToggleInversion: () => setInverted(!inverted),
 			onTogglePin: () => togglePin("calculator"),
 		}),
-		[exchangeRateDetails, loading, inverted, togglePin],
+		[exchangeRateDetails, loading, inverted, pinnedDialog, togglePin],
 	);
 
 	const badgesProps = useMemo(
