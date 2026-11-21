@@ -446,17 +446,6 @@ const calculateExchangeRate = useCallback(async () => {
 					</div>
 				)}
 			</div>
-			<footer className="mt-6 text-center text-sm text-muted-foreground">
-				Created by{" "}
-				<a
-					href="https://nlhq.vercel.app/"
-					target="_blank"
-					rel="noopener noreferrer"
-					className="underline hover:text-primary transition-colors"
-				>
-					Nicholas
-				</a>
-			</footer>
 		</div>
 	);
 }
