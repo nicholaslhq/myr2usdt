@@ -64,7 +64,7 @@ export default function Home() {
 		[],
 	);
 	const [showChart, setShowChart] = useState(false);
-	const [theme, setTheme] = useState<"light" | "dark" | "crypto">("light");
+	const [theme, setTheme] = useState<"light" | "dark">("dark");
 	const [pinnedDialog, setPinnedDialog] = useState<
 		"calculator" | "details" | null
 	>(null);
@@ -256,11 +256,9 @@ const calculateExchangeRate = useCallback(async () => {
 	// Apply theme class to document root
 	useEffect(() => {
 		const root = document.documentElement;
-		root.classList.remove("dark", "crypto");
+		root.classList.remove("dark");
 		if (theme === "dark") {
 			root.classList.add("dark");
-		} else if (theme === "crypto") {
-			root.classList.add("crypto");
 		}
 	}, [theme]);
 

@@ -21,7 +21,7 @@ import {
 import { Settings, Heart, Sparkles, Github, ExternalLink } from "lucide-react";
 import React, { useEffect, useState } from "react";
 
-type Theme = "light" | "dark" | "crypto";
+type Theme = "light" | "dark";
 
 interface SettingsDialogProps {
 	showChart: boolean;
@@ -40,18 +40,15 @@ function SettingsDialog({
 
 	useEffect(() => {
 		const root = document.documentElement;
-		root.classList.remove("dark", "crypto");
+		root.classList.remove("dark");
 		if (theme === "dark") {
 			root.classList.add("dark");
-		} else if (theme === "crypto") {
-			root.classList.add("crypto");
 		}
 	}, [theme]);
 
 	const THEME_OPTIONS: { value: Theme; label: string }[] = [
-		{ value: "light", label: "Light" },
 		{ value: "dark", label: "Dark" },
-		{ value: "crypto", label: "Crypto" },
+		{ value: "light", label: "Light" },
 	];
 
 	return (
