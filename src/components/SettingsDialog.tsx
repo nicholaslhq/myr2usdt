@@ -26,6 +26,10 @@ type Theme = "light" | "dark";
 interface SettingsDialogProps {
 	showChart: boolean;
 	setShowChart: (show: boolean) => void;
+	showBadges: boolean;
+	setShowBadges: (show: boolean) => void;
+	showSelectors: boolean;
+	setShowSelectors: (show: boolean) => void;
 	theme: Theme;
 	setTheme: (theme: Theme) => void;
 }
@@ -33,6 +37,10 @@ interface SettingsDialogProps {
 function SettingsDialog({
 	showChart,
 	setShowChart,
+	showBadges,
+	setShowBadges,
+	showSelectors,
+	setShowSelectors,
 	theme,
 	setTheme,
 }: SettingsDialogProps) {
@@ -80,6 +88,30 @@ function SettingsDialog({
 						<Switch
 							checked={showChart}
 							onCheckedChange={setShowChart}
+						/>
+					</div>
+					<div className="flex items-center justify-between">
+						<div className="flex flex-col space-y-1">
+							<Label>External Rates Badges</Label>
+							<p className="text-xs text-muted-foreground">
+								Toggle external rates badges visibility
+							</p>
+						</div>
+						<Switch
+							checked={showBadges}
+							onCheckedChange={setShowBadges}
+						/>
+					</div>
+					<div className="flex items-center justify-between">
+						<div className="flex flex-col space-y-1">
+							<Label>Platform Asset Selectors</Label>
+							<p className="text-xs text-muted-foreground">
+								Toggle platform asset selectors visibility
+							</p>
+						</div>
+						<Switch
+							checked={showSelectors}
+							onCheckedChange={setShowSelectors}
 						/>
 					</div>
 					<div className="flex items-center justify-between">

@@ -64,6 +64,8 @@ export default function Home() {
 		[],
 	);
 	const [showChart, setShowChart] = useState(false);
+	const [showBadges, setShowBadges] = useState(true);
+	const [showSelectors, setShowSelectors] = useState(true);
 	const [theme, setTheme] = useState<"light" | "dark">("dark");
 	const [pinnedDialog, setPinnedDialog] = useState<
 		"calculator" | "details" | null
@@ -383,9 +385,9 @@ const calculateExchangeRate = useCallback(async () => {
 						</div>
 					)}
 
-					<ExternalRatesBadges {...badgesProps} />
+					{showBadges && <ExternalRatesBadges {...badgesProps} />}
 
-					<PlatformAssetSelectors {...selectorsProps} />
+					{showSelectors && <PlatformAssetSelectors {...selectorsProps} />}
 
 					<CardFooter className="flex w-full items-center gap-2">
 						<div className="flex w-1/2 gap-2">
@@ -394,6 +396,10 @@ const calculateExchangeRate = useCallback(async () => {
 							<SettingsDialog
 								showChart={showChart}
 								setShowChart={setShowChart}
+								showBadges={showBadges}
+								setShowBadges={setShowBadges}
+								showSelectors={showSelectors}
+								setShowSelectors={setShowSelectors}
 								theme={theme}
 								setTheme={setTheme}
 							/>
