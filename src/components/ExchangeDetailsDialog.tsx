@@ -21,7 +21,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
-import React, { memo, useState } from "react";
+import React, { memo, useState, useRef, useEffect } from "react";
 
 const EXCHANGE_URLS: Record<string, string> = {
 	luno: "https://www.luno.com/trade/markets/",
@@ -67,15 +67,17 @@ function PriceField({
 	name,
 	value,
 	unit,
+	animation = "",
 }: {
 	name: string;
 	value: number | undefined | null;
 	unit: string;
+	animation?: "green-pulse" | "red-pulse" | "";
 }) {
 	return (
 		<div className="col-span-1">
 			<p className="text-sm font-medium">{name}:</p>
-			<p className="text-sm">
+			<p className={`text-sm ${animation}`}>
 				{formatRate(value)} {unit}
 			</p>
 		</div>
@@ -87,11 +89,13 @@ function PlatformSection({
 	data,
 	currency,
 	asset,
+	priceAnimation = "",
 }: {
 	label: string;
 	data: ExchangeRateDetails["source"] | ExchangeRateDetails["target"];
 	currency: string;
 	asset: string;
+	priceAnimation?: "green-pulse" | "red-pulse" | "";
 }) {
 	const url = getExchangeUrl(data.platform, asset);
 	const isClickable = !!url;
@@ -128,7 +132,7 @@ function PlatformSection({
 				</TooltipProvider>
 				<Badge variant="outline">{asset.toUpperCase()}</Badge>
 			</div>
-			<PriceField name="Price" value={data.price} unit={currency} />
+			<PriceField name="Price" value={data.price} unit={currency} animation={priceAnimation} />
 			{data.volume && (
 				<div className="col-span-1">
 					<p className="text-sm font-medium">Volume:</p>
@@ -151,6 +155,8 @@ function PlatformSection({
 	);
 }
 
+const ANIMATION_DURATION = 2000;
+
 const ExchangeDetailsDialog = memo(function ExchangeDetailsDialog({
 	exchangeRateDetails,
 	loading,
@@ -163,6 +169,56 @@ const ExchangeDetailsDialog = memo(function ExchangeDetailsDialog({
 	const sourceCurrency = "MYR";
 	const targetCurrency = "USDT";
 	const [open, setOpen] = useState(false);
+
+	// Track previous prices for animation
+	const prevSourcePriceRef = useRef<number | null>(null);
+	const prevTargetPriceRef = useRef<number | null>(null);
+	const [sourcePriceAnimation, setSourcePriceAnimation] = useState<
+		"green-pulse" | "red-pulse" | ""
+	>("");
+	const [targetPriceAnimation, setTargetPriceAnimation] = useState<
+		"green-pulse" | "red-pulse" | ""
+	>("");
+
+	// Detect price changes and trigger animations
+	useEffect(() => {
+		if (loading || !exchangeRateDetails) return;
+
+		if (prevSourcePriceRef.current !== null) {
+			if (exchangeRateDetails.source.price < prevSourcePriceRef.current) {
+				setSourcePriceAnimation("green-pulse");
+			} else if (exchangeRateDetails.source.price > prevSourcePriceRef.current) {
+				setSourcePriceAnimation("red-pulse");
+			} else {
+				setSourcePriceAnimation("");
+			}
+		}
+		prevSourcePriceRef.current = exchangeRateDetails.source.price;
+
+		if (prevTargetPriceRef.current !== null) {
+			if (exchangeRateDetails.target.price < prevTargetPriceRef.current) {
+				setTargetPriceAnimation("green-pulse");
+			} else if (exchangeRateDetails.target.price > prevTargetPriceRef.current) {
+				setTargetPriceAnimation("red-pulse");
+			} else {
+				setTargetPriceAnimation("");
+			}
+		}
+		prevTargetPriceRef.current = exchangeRateDetails.target.price;
+	}, [loading, exchangeRateDetails]);
+
+	// Clear animations after duration
+	useEffect(() => {
+		if (!sourcePriceAnimation) return;
+		const timer = setTimeout(() => setSourcePriceAnimation(""), ANIMATION_DURATION);
+		return () => clearTimeout(timer);
+	}, [sourcePriceAnimation]);
+
+	useEffect(() => {
+		if (!targetPriceAnimation) return;
+		const timer = setTimeout(() => setTargetPriceAnimation(""), ANIMATION_DURATION);
+		return () => clearTimeout(timer);
+	}, [targetPriceAnimation]);
 
 	const conditionalBody =
 		loading && !exchangeRateDetails ? (
@@ -185,6 +241,7 @@ const ExchangeDetailsDialog = memo(function ExchangeDetailsDialog({
 						data={exchangeRateDetails.source}
 						currency={sourceCurrency}
 						asset={cryptoAsset}
+						priceAnimation={sourcePriceAnimation}
 					/>
 				</div>
 
@@ -196,6 +253,7 @@ const ExchangeDetailsDialog = memo(function ExchangeDetailsDialog({
 						data={exchangeRateDetails.target}
 						currency={targetCurrency}
 						asset={cryptoAsset}
+						priceAnimation={targetPriceAnimation}
 					/>
 				</div>
 			</div>
