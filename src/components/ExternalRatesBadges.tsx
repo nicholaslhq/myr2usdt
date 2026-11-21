@@ -69,8 +69,8 @@ const ExternalRatesBadges = memo(function ExternalRatesBadges({
 									<span
 										className={`text-xs ${
 											coinGeckoDiff >= 0
-												? "text-green-500"
-												: "text-red-500"
+												? "text-success-foreground"
+												: "text-destructive"
 										}`}
 									>
 										({formatDiff(coinGeckoDiff)}%)
@@ -113,8 +113,8 @@ const ExternalRatesBadges = memo(function ExternalRatesBadges({
 									<span
 										className={`text-xs ${
 											coinbaseDiff >= 0
-												? "text-green-500"
-												: "text-red-500"
+												? "text-success-foreground"
+												: "text-destructive"
 										}`}
 									>
 										({formatDiff(coinbaseDiff)}%)
@@ -157,8 +157,8 @@ const ExternalRatesBadges = memo(function ExternalRatesBadges({
 									<span
 										className={`text-xs ${
 											bnmDiff >= 0
-												? "text-green-500"
-												: "text-red-500"
+												? "text-success-foreground"
+												: "text-destructive"
 										}`}
 									>
 										({formatDiff(bnmDiff)}%)

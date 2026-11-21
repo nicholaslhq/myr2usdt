@@ -33,7 +33,8 @@ const ExchangeRateChart = dynamic(
 		ssr: false,
 	},
 );
-import { RefreshCw, ChartSpline } from "lucide-react";
+import { RefreshCw } from "lucide-react";
+import SettingsDialog from "@/components/SettingsDialog";
 
 const AUTO_REFRESH_INTERVAL = 60_000;
 const ANIMATION_DURATION = 2000;
@@ -63,6 +64,7 @@ export default function Home() {
 		[],
 	);
 	const [showChart, setShowChart] = useState(false);
+	const [theme, setTheme] = useState<"light" | "dark" | "crypto">("light");
 	const [pinnedDialog, setPinnedDialog] = useState<
 		"calculator" | "details" | null
 	>(null);
@@ -251,6 +253,17 @@ const calculateExchangeRate = useCallback(async () => {
 		}
 	}, [loading, exchangeRateDetails, previousExchangeRate]);
 
+	// Apply theme class to document root
+	useEffect(() => {
+		const root = document.documentElement;
+		root.classList.remove("dark", "crypto");
+		if (theme === "dark") {
+			root.classList.add("dark");
+		} else if (theme === "crypto") {
+			root.classList.add("crypto");
+		}
+	}, [theme]);
+
 	// Calculate percentage differences - memoized computation
 	useEffect(() => {
 		if (!exchangeRateDetails?.rate) {
@@ -277,8 +290,6 @@ const calculateExchangeRate = useCallback(async () => {
 	}, [exchangeRateDetails, coinGeckoRate, coinbaseRate, bnmRate]);
 
 	// Memoized derived values
-	const canShowChart = historicalRates.length > 1;
-
 	const chartProps = useMemo(() => ({ historicalRates, inverted }), [historicalRates, inverted]);
 
 	const detailsDialogProps = useMemo(
@@ -361,7 +372,7 @@ const calculateExchangeRate = useCallback(async () => {
 	);
 
 	return (
-		<div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4">
+		<div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
 			<div className="flex w-full max-w-md flex-col items-center gap-4 md:max-w-4xl md:flex-row md:items-start md:justify-center">
 				<Card className="w-full max-w-md">
 					<AppHeader inverted={inverted} onToggleInversion={() => setInverted(!inverted)} />
@@ -382,16 +393,12 @@ const calculateExchangeRate = useCallback(async () => {
 						<div className="flex w-1/2 gap-2">
 							<ExchangeDetailsDialog {...detailsDialogProps} />
 							<ConversionCalculatorDialog {...conversionCalculatorProps} />
-							{canShowChart && (
-								<Button
-									onClick={() => setShowChart(!showChart)}
-									className="flex-1 cursor-pointer"
-									variant={showChart ? "secondary" : "outline"}
-									aria-label="Toggle chart visibility"
-								>
-									<ChartSpline className="h-4 w-4" />
-								</Button>
-							)}
+							<SettingsDialog
+								showChart={showChart}
+								setShowChart={setShowChart}
+								theme={theme}
+								setTheme={setTheme}
+							/>
 						</div>
 						<Button
 							onClick={calculateExchangeRate}
@@ -439,7 +446,7 @@ const calculateExchangeRate = useCallback(async () => {
 					</div>
 				)}
 			</div>
-			<footer className="mt-6 text-center text-sm text-gray-500">
+			<footer className="mt-6 text-center text-sm text-muted-foreground">
 				Created by{" "}
 				<a
 					href="https://nlhq.vercel.app/"

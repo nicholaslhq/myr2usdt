@@ -514,7 +514,7 @@ const ConversionCalculatorDialog = memo(function ConversionCalculatorDialog({
 								<Button
 									variant="ghost"
 									size="icon"
-									className="h-8 w-8 cursor-pointer rounded-full hover:bg-gray-200"
+									className="h-8 w-8 cursor-pointer rounded-full"
 									onClick={handleSwapDirection}
 									aria-label="Swap conversion direction"
 									disabled={!baseRate}

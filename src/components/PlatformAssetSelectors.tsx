@@ -51,7 +51,7 @@ export default function PlatformAssetSelectors({
 				</SelectContent>
 			</Select>
 
-			<ArrowRight className="h-5 w-5 text-gray-700" />
+			<ArrowRight className="h-5 w-5 text-muted-foreground" />
 
 			<Select
 				value={targetPlatform}
@@ -75,7 +75,7 @@ export default function PlatformAssetSelectors({
 				</SelectContent>
 			</Select>
 
-			<CircleDollarSign className="h-5 w-5 text-gray-700" />
+			<CircleDollarSign className="h-5 w-5 text-muted-foreground" />
 
 			<Select
 				value={cryptoAsset}

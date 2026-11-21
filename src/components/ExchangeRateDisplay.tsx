@@ -41,7 +41,7 @@ export default function ExchangeRateDisplay({
 										loading ? "opacity-50" : ""
 									} ${
 										hasError
-											? "text-red-600 opacity-50"
+											? "text-destructive opacity-50"
 											: ""
 									} ${loading ? "" : rateChangeAnimation}`}
 								>

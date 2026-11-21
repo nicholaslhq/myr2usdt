@@ -37,7 +37,7 @@ export default function AppHeader({
 
 	return (
 		<CardHeader className="flex items-center justify-center">
-			<CardTitle className="flex items-center gap-2 text-md font-bold text-gray-800">
+			<CardTitle className="flex items-center gap-2 text-md font-bold text-foreground">
 				<div style={avatarFlipStyle}>
 					<Avatar className="size-6">
 						<AvatarImage
@@ -53,7 +53,7 @@ export default function AppHeader({
 				<Button
 					variant="ghost"
 					size="icon"
-					className="h-6 w-6 cursor-pointer rounded-full hover:bg-gray-200"
+					className="h-6 w-6 cursor-pointer rounded-full hover:bg-accent"
 					onClick={handleToggle}
 					aria-label="Toggle rate inversion"
 				>
