@@ -15,7 +15,7 @@ import {
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
-import { Info, Pin, X } from "lucide-react";
+import { Info, Pin } from "lucide-react";
 import { ExchangeRateDetails } from "@/lib/api";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
@@ -290,16 +290,6 @@ const ExchangeDetailsDialog = memo(function ExchangeDetailsDialog({
 							className="h-8 w-8 cursor-pointer rounded-full text-primary hover:bg-muted hover:text-foreground"
 						>
 							<Pin className="h-4 w-4 fill-current" />
-						</Button>
-						<Button
-							type="button"
-							variant="ghost"
-							size="icon"
-							onClick={onTogglePin}
-							aria-label="Close exchange details"
-							className="h-8 w-8 cursor-pointer rounded-full opacity-70 hover:bg-muted hover:opacity-100"
-						>
-							<X className="h-4 w-4" />
 						</Button>
 					</div>
 				</div>

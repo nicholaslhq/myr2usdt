@@ -24,7 +24,6 @@ import {
 	ChevronRight,
 	RotateCcw,
 	Pin,
-	X,
 } from "lucide-react";
 import { ExchangeRateDetails } from "@/lib/api";
 import React, { memo, useState, useMemo, useEffect, useCallback } from "react";
@@ -1072,16 +1071,6 @@ const ConversionCalculatorDialog = memo(function ConversionCalculatorDialog({
 							className="h-8 w-8 cursor-pointer rounded-full text-primary hover:bg-muted hover:text-foreground"
 						>
 							<Pin className="h-4 w-4 fill-current" />
-						</Button>
-						<Button
-							type="button"
-							variant="ghost"
-							size="icon"
-							onClick={onTogglePin}
-							aria-label="Close calculator"
-							className="h-8 w-8 cursor-pointer rounded-full opacity-70 hover:bg-muted hover:opacity-100"
-						>
-							<X className="h-4 w-4" />
 						</Button>
 					</div>
 				</div>
