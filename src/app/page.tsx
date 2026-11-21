@@ -63,6 +63,13 @@ export default function Home() {
 		[],
 	);
 	const [showChart, setShowChart] = useState(false);
+	const [pinnedDialog, setPinnedDialog] = useState<
+		"calculator" | "details" | null
+	>(null);
+
+	const togglePin = useCallback((which: "calculator" | "details") => {
+		setPinnedDialog((prev) => (prev === which ? null : which));
+	}, []);
 
 	const exchangeRateDetailsRef = useRef(exchangeRateDetails);
 	const prevRateRef = useRef<number | null>(null);
@@ -278,8 +285,9 @@ export default function Home() {
 			cryptoAsset,
 			className: "flex-1 cursor-pointer",
 			inverted,
+			onTogglePin: () => togglePin("details"),
 		}),
-		[exchangeRateDetails, loading, cryptoAsset, inverted],
+		[exchangeRateDetails, loading, cryptoAsset, inverted, togglePin],
 	);
 
 	const conversionCalculatorProps = useMemo(
@@ -289,8 +297,9 @@ export default function Home() {
 			className: "flex-1 cursor-pointer",
 			inverted,
 			onToggleInversion: () => setInverted(!inverted),
+			onTogglePin: () => togglePin("calculator"),
 		}),
-		[exchangeRateDetails, loading, inverted],
+		[exchangeRateDetails, loading, inverted, togglePin],
 	);
 
 	const badgesProps = useMemo(
@@ -341,63 +350,83 @@ export default function Home() {
 
 	return (
 		<div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4">
-			<Card className="w-full max-w-md">
-				<AppHeader inverted={inverted} onToggleInversion={() => setInverted(!inverted)} />
+			<div className="flex w-full max-w-md flex-col items-center gap-4 md:max-w-4xl md:flex-row md:items-start md:justify-center">
+				<Card className="w-full max-w-md">
+					<AppHeader inverted={inverted} onToggleInversion={() => setInverted(!inverted)} />
 
-				<ExchangeRateDisplay {...displayProps} />
+					<ExchangeRateDisplay {...displayProps} />
 
-				{showChart && (
-					<div className="transition-all duration-500 ease-in-out overflow-hidden">
-						<ExchangeRateChart {...chartProps} />
+					{showChart && (
+						<div className="transition-all duration-500 ease-in-out overflow-hidden">
+							<ExchangeRateChart {...chartProps} />
+						</div>
+					)}
+
+					<ExternalRatesBadges {...badgesProps} />
+
+					<PlatformAssetSelectors {...selectorsProps} />
+
+					<CardFooter className="flex w-full items-center gap-2">
+						<div className="flex w-1/2 gap-2">
+							<ExchangeDetailsDialog {...detailsDialogProps} />
+							<ConversionCalculatorDialog {...conversionCalculatorProps} />
+							{canShowChart && (
+								<Button
+									onClick={() => setShowChart(!showChart)}
+									className="flex-1 cursor-pointer"
+									variant={showChart ? "secondary" : "outline"}
+									aria-label="Toggle chart visibility"
+								>
+									<ChartSpline className="h-4 w-4" />
+								</Button>
+							)}
+						</div>
+						<Button
+							onClick={calculateExchangeRate}
+							className="relative flex-1 overflow-hidden cursor-pointer"
+							disabled={
+								loading || (!exchangeRateDetails && !hasError)
+							}
+							aria-label="Refresh exchange rate"
+						>
+							<div
+								className="absolute inset-0 opacity-20 transition-all duration-75 ease-linear"
+								style={{
+									width: `${progress * 100}%`,
+									backgroundColor: "currentColor",
+								}}
+							/>
+							<span className="relative z-10 flex items-center justify-center">
+								<RefreshCw
+									className={
+										loading
+											? "h-4 w-4 animate-spin-slow"
+											: "h-4 w-4"
+									}
+								/>
+							</span>
+						</Button>
+					</CardFooter>
+				</Card>
+				{pinnedDialog === "calculator" && (
+					<div className="w-full max-w-md md:w-96">
+						<ConversionCalculatorDialog
+							{...conversionCalculatorProps}
+							mode="docked"
+							pinned
+						/>
 					</div>
 				)}
-
-				<ExternalRatesBadges {...badgesProps} />
-
-				<PlatformAssetSelectors {...selectorsProps} />
-
-				<CardFooter className="flex w-full items-center gap-2">
-					<div className="flex w-1/2 gap-2">
-						<ExchangeDetailsDialog {...detailsDialogProps} />
-						<ConversionCalculatorDialog {...conversionCalculatorProps} />
-						{canShowChart && (
-							<Button
-								onClick={() => setShowChart(!showChart)}
-								className="flex-1 cursor-pointer"
-								variant={showChart ? "secondary" : "outline"}
-								aria-label="Toggle chart visibility"
-							>
-								<ChartSpline className="h-4 w-4" />
-							</Button>
-						)}
-					</div>
-					<Button
-						onClick={calculateExchangeRate}
-						className="relative flex-1 overflow-hidden cursor-pointer"
-						disabled={
-							loading || (!exchangeRateDetails && !hasError)
-						}
-						aria-label="Refresh exchange rate"
-					>
-						<div
-							className="absolute inset-0 opacity-20 transition-all duration-75 ease-linear"
-							style={{
-								width: `${progress * 100}%`,
-								backgroundColor: "currentColor",
-							}}
+				{pinnedDialog === "details" && (
+					<div className="w-full max-w-md md:w-96">
+						<ExchangeDetailsDialog
+							{...detailsDialogProps}
+							mode="docked"
+							pinned
 						/>
-						<span className="relative z-10 flex items-center justify-center">
-							<RefreshCw
-								className={
-									loading
-										? "h-4 w-4 animate-spin-slow"
-										: "h-4 w-4"
-								}
-							/>
-						</span>
-					</Button>
-				</CardFooter>
-			</Card>
+					</div>
+				)}
+			</div>
 			<footer className="mt-6 text-center text-sm text-gray-500">
 				Created by{" "}
 				<a

@@ -15,13 +15,13 @@ import {
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
-import { Info } from "lucide-react";
+import { Info, Pin, X } from "lucide-react";
 import { ExchangeRateDetails } from "@/lib/api";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
-import React, { memo } from "react";
+import React, { memo, useState } from "react";
 
 const EXCHANGE_URLS: Record<string, string> = {
 	luno: "https://www.luno.com/trade/markets/",
@@ -54,6 +54,9 @@ interface ExchangeDetailsDialogProps {
 	cryptoAsset: string;
 	className?: string;
 	inverted: boolean;
+	mode?: "modal" | "docked";
+	pinned?: boolean;
+	onTogglePin?: () => void;
 }
 
 function formatRate(val: number | undefined | null): string {
@@ -153,13 +156,103 @@ const ExchangeDetailsDialog = memo(function ExchangeDetailsDialog({
 	loading,
 	cryptoAsset,
 	className,
-	inverted,
+	mode = "modal",
+	onTogglePin,
 }: ExchangeDetailsDialogProps) {
 	const sourceCurrency = "MYR";
 	const targetCurrency = "USDT";
+	const [open, setOpen] = useState(false);
+
+	const conditionalBody =
+		loading && !exchangeRateDetails ? (
+			<div className="grid gap-4 py-4">
+				<Skeleton className="h-12 w-3/4" />
+				<Skeleton className="h-8 w-full" />
+				<Skeleton className="h-8 w-full" />
+				<Skeleton className="h-8 w-full" />
+				<Separator />
+				<Skeleton className="h-12 w-3/4" />
+				<Skeleton className="h-8 w-full" />
+				<Skeleton className="h-8 w-full" />
+				<Skeleton className="h-8 w-full" />
+			</div>
+		) : exchangeRateDetails ? (
+			<div className="grid gap-4 py-4">
+				<div className="grid grid-cols-2 gap-4">
+					<PlatformSection
+						label="Source"
+						data={exchangeRateDetails.source}
+						currency={sourceCurrency}
+						asset={cryptoAsset}
+					/>
+				</div>
+
+				<Separator />
+
+				<div className="grid grid-cols-2 gap-4">
+					<PlatformSection
+						label="Target"
+						data={exchangeRateDetails.target}
+						currency={targetCurrency}
+						asset={cryptoAsset}
+					/>
+				</div>
+			</div>
+		) : null;
+
+	const header = (
+		<DialogHeader>
+			<DialogTitle>Exchange Details</DialogTitle>
+			<DialogDescription>
+				Detailed information about the exchange rate.
+			</DialogDescription>
+		</DialogHeader>
+	);
+
+	if (mode === "docked") {
+		return (
+			<div className="flex max-h-[85vh] w-full flex-col overflow-hidden rounded-lg border bg-card text-card-foreground shadow-lg">
+				<div className="flex items-start justify-between gap-2 border-b p-4">
+					<div className="space-y-1">
+						<h2 className="text-lg font-semibold leading-none">
+							Exchange Details
+						</h2>
+						<p className="text-sm text-muted-foreground">
+							Detailed information about the exchange rate.
+						</p>
+					</div>
+					<div className="flex items-center gap-1">
+						<Button
+							type="button"
+							variant="ghost"
+							size="icon"
+							onClick={onTogglePin}
+							aria-label="Unpin exchange details"
+							className="h-8 w-8 cursor-pointer rounded-full text-primary hover:bg-muted hover:text-foreground"
+						>
+							<Pin className="h-4 w-4 fill-current" />
+						</Button>
+						<Button
+							type="button"
+							variant="ghost"
+							size="icon"
+							onClick={onTogglePin}
+							aria-label="Close exchange details"
+							className="h-8 w-8 cursor-pointer rounded-full opacity-70 hover:bg-muted hover:opacity-100"
+						>
+							<X className="h-4 w-4" />
+						</Button>
+					</div>
+				</div>
+				<div className="overflow-y-auto p-4 pt-0">
+					{conditionalBody}
+				</div>
+			</div>
+		);
+	}
 
 	return (
-		<Dialog>
+		<Dialog open={open} onOpenChange={setOpen}>
 			<DialogTrigger asChild>
 				<Button
 					variant="outline"
@@ -171,47 +264,23 @@ const ExchangeDetailsDialog = memo(function ExchangeDetailsDialog({
 				</Button>
 			</DialogTrigger>
 			<DialogContent className="sm:max-w-[425px]">
-				<DialogHeader>
-					<DialogTitle>Exchange Details</DialogTitle>
-					<DialogDescription>
-						Detailed information about the exchange rate.
-					</DialogDescription>
-				</DialogHeader>
-				{loading && !exchangeRateDetails ? (
-					<div className="grid gap-4 py-4">
-						<Skeleton className="h-12 w-3/4" />
-						<Skeleton className="h-8 w-full" />
-						<Skeleton className="h-8 w-full" />
-						<Skeleton className="h-8 w-full" />
-						<Separator />
-						<Skeleton className="h-12 w-3/4" />
-						<Skeleton className="h-8 w-full" />
-						<Skeleton className="h-8 w-full" />
-						<Skeleton className="h-8 w-full" />
-					</div>
-				) : exchangeRateDetails ? (
-					<div className="grid gap-4 py-4">
-						<div className="grid grid-cols-2 gap-4">
-							<PlatformSection
-								label="Source"
-								data={exchangeRateDetails.source}
-								currency={sourceCurrency}
-								asset={cryptoAsset}
-							/>
-						</div>
-
-						<Separator />
-
-						<div className="grid grid-cols-2 gap-4">
-							<PlatformSection
-								label="Target"
-								data={exchangeRateDetails.target}
-								currency={targetCurrency}
-								asset={cryptoAsset}
-							/>
-						</div>
-					</div>
-				) : null}
+				{onTogglePin && (
+					<Button
+						type="button"
+						variant="ghost"
+						size="icon"
+						onClick={() => {
+							setOpen(false);
+							onTogglePin();
+						}}
+						aria-label="Pin exchange details to side"
+						className="absolute top-4 right-12 z-10 h-8 w-8 cursor-pointer rounded-full opacity-70 hover:bg-muted hover:text-foreground hover:opacity-100"
+					>
+						<Pin className="h-4 w-4" />
+					</Button>
+				)}
+				{header}
+				{conditionalBody}
 				<DialogFooter>
 					<DialogClose asChild>
 						<Button type="button" className="cursor-pointer">Close</Button>

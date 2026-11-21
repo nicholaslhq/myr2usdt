@@ -23,6 +23,8 @@ import {
 	ChevronDown,
 	ChevronRight,
 	RotateCcw,
+	Pin,
+	X,
 } from "lucide-react";
 import { ExchangeRateDetails } from "@/lib/api";
 import React, { memo, useState, useMemo, useEffect, useCallback } from "react";
@@ -33,6 +35,9 @@ interface ConversionCalculatorDialogProps {
 	className?: string;
 	inverted: boolean;
 	onToggleInversion?: () => void;
+	mode?: "modal" | "docked";
+	pinned?: boolean;
+	onTogglePin?: () => void;
 }
 
 type FeeType = "fixed" | "percentage";
@@ -128,6 +133,8 @@ const ConversionCalculatorDialog = memo(function ConversionCalculatorDialog({
 	className,
 	inverted,
 	onToggleInversion,
+	mode = "modal",
+	onTogglePin,
 }: ConversionCalculatorDialogProps) {
 	const [inputValue, setInputValue] = useState("1000");
 	const [inputCurrency, setInputCurrency] = useState<"source" | "target">(
@@ -172,6 +179,12 @@ const ConversionCalculatorDialog = memo(function ConversionCalculatorDialog({
 			}
 		}
 	}, [dialogOpen, inverted]);
+
+	useEffect(() => {
+		if (mode === "docked") {
+			setInputCurrency(inverted ? "target" : "source");
+		}
+	}, [mode, inverted]);
 
 	const handleInputChange = (value: string) => {
 		const numericValue = value.replace(/[^0-9.]/g, "");
@@ -453,27 +466,8 @@ const ConversionCalculatorDialog = memo(function ConversionCalculatorDialog({
 		return fa;
 	})();
 
-	return (
-		<Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-			<DialogTrigger asChild>
-				<Button
-					variant="outline"
-					className={className}
-					disabled={!exchangeRateDetails || loading}
-					aria-label="Conversion Calculator"
-				>
-					<Calculator className="h-4 w-4" />
-				</Button>
-			</DialogTrigger>
-			<DialogContent className="sm:max-w-[550px] max-h-[90vh] overflow-y-auto">
-				<DialogHeader>
-					<DialogTitle>Conversion Calculator</DialogTitle>
-					<DialogDescription>
-						Calculate converted amounts using the current exchange
-						rate.
-					</DialogDescription>
-				</DialogHeader>
-				{loading && !exchangeRateDetails ? (
+	const conditionalBody =
+		loading && !exchangeRateDetails ? (
 					<div className="grid gap-4 py-4">
 						<div className="h-12 w-3/4 animate-pulse bg-muted" />
 						<div className="h-10 w-full animate-pulse bg-muted" />
@@ -1043,7 +1037,88 @@ const ConversionCalculatorDialog = memo(function ConversionCalculatorDialog({
 							</div>
 						)}
 					</div>
-				) : null}
+				) : null;
+
+	const header = (
+		<DialogHeader>
+			<DialogTitle>Conversion Calculator</DialogTitle>
+			<DialogDescription>
+				Calculate converted amounts using the current exchange rate.
+			</DialogDescription>
+		</DialogHeader>
+	);
+
+	if (mode === "docked") {
+		return (
+			<div className="flex max-h-[85vh] w-full flex-col overflow-hidden rounded-lg border bg-card text-card-foreground shadow-lg">
+				<div className="flex items-start justify-between gap-2 border-b p-4">
+					<div className="space-y-1">
+						<h2 className="text-lg font-semibold leading-none">
+							Conversion Calculator
+						</h2>
+						<p className="text-sm text-muted-foreground">
+							Calculate converted amounts using the current
+							exchange rate.
+						</p>
+					</div>
+					<div className="flex items-center gap-1">
+						<Button
+							type="button"
+							variant="ghost"
+							size="icon"
+							onClick={onTogglePin}
+							aria-label="Unpin calculator"
+							className="h-8 w-8 cursor-pointer rounded-full text-primary hover:bg-muted hover:text-foreground"
+						>
+							<Pin className="h-4 w-4 fill-current" />
+						</Button>
+						<Button
+							type="button"
+							variant="ghost"
+							size="icon"
+							onClick={onTogglePin}
+							aria-label="Close calculator"
+							className="h-8 w-8 cursor-pointer rounded-full opacity-70 hover:bg-muted hover:opacity-100"
+						>
+							<X className="h-4 w-4" />
+						</Button>
+					</div>
+				</div>
+				<div className="overflow-y-auto p-4 pt-0">{conditionalBody}</div>
+			</div>
+		);
+	}
+
+	return (
+		<Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+			<DialogTrigger asChild>
+				<Button
+					variant="outline"
+					className={className}
+					disabled={!exchangeRateDetails || loading}
+					aria-label="Conversion Calculator"
+				>
+					<Calculator className="h-4 w-4" />
+				</Button>
+			</DialogTrigger>
+			<DialogContent className="sm:max-w-[550px] max-h-[90vh] overflow-y-auto">
+				{onTogglePin && (
+					<Button
+						type="button"
+						variant="ghost"
+						size="icon"
+						onClick={() => {
+							setDialogOpen(false);
+							onTogglePin();
+						}}
+						aria-label="Pin calculator to side"
+						className="absolute top-4 right-12 z-10 h-8 w-8 cursor-pointer rounded-full opacity-70 hover:bg-muted hover:text-foreground hover:opacity-100"
+					>
+						<Pin className="h-4 w-4" />
+					</Button>
+				)}
+				{header}
+				{conditionalBody}
 				<DialogFooter>
 					<DialogClose asChild>
 						<Button type="button" className="cursor-pointer">Close</Button>
