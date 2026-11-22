@@ -278,7 +278,7 @@ export async function fetchBinancePrice(symbol: string): Promise<MarketDetail> {
 	);
 	return {
 		price: parseFloat(data.lastPrice),
-		timestamp: data.openTime,
+		timestamp: data.closeTime,
 		bid: parseFloat(data.bidPrice),
 		ask: parseFloat(data.askPrice),
 		volume: parseFloat(data.volume),
