@@ -67,59 +67,86 @@ export default function Home() {
 	const [showBadges, setShowBadges] = useState(true);
 	const [showSelectors, setShowSelectors] = useState(true);
 	const [theme, setTheme] = useState<"light" | "dark">("dark");
-	const [pinnedDialog, setPinnedDialog] = useState<
-		"calculator" | "details" | null
-	>(null);
+	const [allowMultiplePins, setAllowMultiplePins] = useState(false);
+	const [pinnedDialogs, setPinnedDialogs] = useState<
+		Set<"calculator" | "details">
+	>(new Set());
 
-const togglePin = useCallback((which: "calculator" | "details") => {
- 		setPinnedDialog((prev) => (prev === which ? null : which));
- 	}, []);
+	useEffect(() => {
+		if (!allowMultiplePins && pinnedDialogs.size > 1) {
+			setPinnedDialogs((prev) => {
+				const first = prev.values().next().value as
+					| "calculator"
+					| "details"
+					| undefined;
+				return first ? new Set([first]) : new Set();
+			});
+		}
+	}, [allowMultiplePins, pinnedDialogs]);
 
- 	const exchangeRateDetailsRef = useRef(exchangeRateDetails);
- 	const prevRateRef = useRef<number | null>(null);
+	const togglePin = useCallback(
+		(which: "calculator" | "details") => {
+			setPinnedDialogs((prev) => {
+				const next = new Set(prev);
+				if (next.has(which)) {
+					next.delete(which);
+				} else {
+					if (!allowMultiplePins) {
+						next.clear();
+					}
+					next.add(which);
+				}
+				return next;
+			});
+		},
+		[allowMultiplePins],
+	);
 
- 	useEffect(() => {
- 		exchangeRateDetailsRef.current = exchangeRateDetails;
- 	}, [exchangeRateDetails]);
+	const exchangeRateDetailsRef = useRef(exchangeRateDetails);
+	const prevRateRef = useRef<number | null>(null);
 
-const calculateExchangeRate = useCallback(async () => {
- 		if (exchangeRateDetailsRef.current) {
- 			prevRateRef.current = exchangeRateDetailsRef.current.rate;
- 		}
+	useEffect(() => {
+		exchangeRateDetailsRef.current = exchangeRateDetails;
+	}, [exchangeRateDetails]);
 
- 		setLoading(true);
- 		setHasError(false);
+	const calculateExchangeRate = useCallback(async () => {
+		if (exchangeRateDetailsRef.current) {
+			prevRateRef.current = exchangeRateDetailsRef.current.rate;
+		}
 
- 		try {
- 			let sourceData: MarketDetail;
- 			let targetData: MarketDetail;
+		setLoading(true);
+		setHasError(false);
 
- 			// Fetch source platform price
- 			if (sourcePlatform === "luno") {
- 				sourceData = await fetchLunoPrice(
- 					`${cryptoAsset.toUpperCase()}MYR`,
- 				);
- 			} else {
- 				sourceData = await fetchHataPrice(
- 					`${cryptoAsset.toUpperCase()}MYR`,
- 				);
- 			}
+		try {
+			let sourceData: MarketDetail;
+			let targetData: MarketDetail;
 
- 			// Fetch target platform price
- 			if (targetPlatform === "binance") {
- 				targetData = await fetchBinancePrice(
- 					`${cryptoAsset.toUpperCase()}USDT`,
- 				);
- 			} else {
- 				targetData = await fetchHuobiPrice(
- 					`${cryptoAsset.toLowerCase()}usdt`,
- 				);
- 			}
+			// Fetch source platform price
+			if (sourcePlatform === "luno") {
+				sourceData = await fetchLunoPrice(
+					`${cryptoAsset.toUpperCase()}MYR`,
+				);
+			} else {
+				sourceData = await fetchHataPrice(
+					`${cryptoAsset.toUpperCase()}MYR`,
+				);
+			}
 
- 			if (sourceData.price && targetData.price) {
- 				const rate = sourceData.price / targetData.price;
- 				const prevRate = prevRateRef.current;
- 				setPreviousExchangeRate(prevRate);
+			// Fetch target platform price
+			if (targetPlatform === "binance") {
+				targetData = await fetchBinancePrice(
+					`${cryptoAsset.toUpperCase()}USDT`,
+				);
+			} else {
+				targetData = await fetchHuobiPrice(
+					`${cryptoAsset.toLowerCase()}usdt`,
+				);
+			}
+
+			if (sourceData.price && targetData.price) {
+				const rate = sourceData.price / targetData.price;
+				const prevRate = prevRateRef.current;
+				setPreviousExchangeRate(prevRate);
 
 				const sourceName =
 					sourcePlatform.charAt(0).toUpperCase() +
@@ -290,7 +317,10 @@ const calculateExchangeRate = useCallback(async () => {
 	}, [exchangeRateDetails, coinGeckoRate, coinbaseRate, bnmRate]);
 
 	// Memoized derived values
-	const chartProps = useMemo(() => ({ historicalRates, inverted }), [historicalRates, inverted]);
+	const chartProps = useMemo(
+		() => ({ historicalRates, inverted }),
+		[historicalRates, inverted],
+	);
 
 	const detailsDialogProps = useMemo(
 		() => ({
@@ -299,7 +329,7 @@ const calculateExchangeRate = useCallback(async () => {
 			cryptoAsset,
 			className: "flex-1 cursor-pointer",
 			inverted,
-			pinned: pinnedDialog === "details",
+			pinned: pinnedDialogs.has("details"),
 			onTogglePin: () => togglePin("details"),
 		}),
 		[
@@ -307,7 +337,7 @@ const calculateExchangeRate = useCallback(async () => {
 			loading,
 			cryptoAsset,
 			inverted,
-			pinnedDialog,
+			pinnedDialogs,
 			togglePin,
 		],
 	);
@@ -318,11 +348,11 @@ const calculateExchangeRate = useCallback(async () => {
 			loading,
 			className: "flex-1 cursor-pointer",
 			inverted,
-			pinned: pinnedDialog === "calculator",
+			pinned: pinnedDialogs.has("calculator"),
 			onToggleInversion: () => setInverted(!inverted),
 			onTogglePin: () => togglePin("calculator"),
 		}),
-		[exchangeRateDetails, loading, inverted, pinnedDialog, togglePin],
+		[exchangeRateDetails, loading, inverted, pinnedDialogs, togglePin],
 	);
 
 	const badgesProps = useMemo(
@@ -373,9 +403,12 @@ const calculateExchangeRate = useCallback(async () => {
 
 	return (
 		<div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
-			<div className="flex w-full max-w-md flex-col items-center gap-4 md:max-w-4xl md:flex-row md:items-start md:justify-center">
+			<div className="flex w-full flex-col items-center gap-4 overflow-x-hidden md:flex-row md:flex-nowrap md:items-start md:justify-center md:overflow-x-auto">
 				<Card className="w-full max-w-md">
-					<AppHeader inverted={inverted} onToggleInversion={() => setInverted(!inverted)} />
+					<AppHeader
+						inverted={inverted}
+						onToggleInversion={() => setInverted(!inverted)}
+					/>
 
 					<ExchangeRateDisplay {...displayProps} />
 
@@ -387,12 +420,16 @@ const calculateExchangeRate = useCallback(async () => {
 
 					{showBadges && <ExternalRatesBadges {...badgesProps} />}
 
-					{showSelectors && <PlatformAssetSelectors {...selectorsProps} />}
+					{showSelectors && (
+						<PlatformAssetSelectors {...selectorsProps} />
+					)}
 
 					<CardFooter className="flex w-full items-center gap-2">
 						<div className="flex w-1/2 gap-2">
 							<ExchangeDetailsDialog {...detailsDialogProps} />
-							<ConversionCalculatorDialog {...conversionCalculatorProps} />
+							<ConversionCalculatorDialog
+								{...conversionCalculatorProps}
+							/>
 							<SettingsDialog
 								showChart={showChart}
 								setShowChart={setShowChart}
@@ -402,6 +439,8 @@ const calculateExchangeRate = useCallback(async () => {
 								setShowSelectors={setShowSelectors}
 								theme={theme}
 								setTheme={setTheme}
+								allowMultiplePins={allowMultiplePins}
+								setAllowMultiplePins={setAllowMultiplePins}
 							/>
 						</div>
 						<Button
@@ -431,23 +470,24 @@ const calculateExchangeRate = useCallback(async () => {
 						</Button>
 					</CardFooter>
 				</Card>
-				{pinnedDialog === "calculator" && (
-					<div className="w-full max-w-md md:w-96">
-						<ConversionCalculatorDialog
-							{...conversionCalculatorProps}
-							mode="docked"
-							pinned
-						/>
-					</div>
-				)}
-				{pinnedDialog === "details" && (
-					<div className="w-full max-w-md md:w-96">
-						<ExchangeDetailsDialog
-							{...detailsDialogProps}
-							mode="docked"
-							pinned
-						/>
-					</div>
+				{Array.from(pinnedDialogs).map((which) =>
+					which === "calculator" ? (
+						<div key={which} className="w-full min-w-[320px] max-w-md md:w-96">
+							<ConversionCalculatorDialog
+								{...conversionCalculatorProps}
+								mode="docked"
+								pinned
+							/>
+						</div>
+					) : (
+						<div key={which} className="w-full min-w-[320px] max-w-md md:w-96">
+							<ExchangeDetailsDialog
+								{...detailsDialogProps}
+								mode="docked"
+								pinned
+							/>
+						</div>
+					),
 				)}
 			</div>
 		</div>

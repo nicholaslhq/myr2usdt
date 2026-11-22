@@ -60,7 +60,7 @@ function formatDateTime(timestamp: number): string {
 	});
 }
 
-const ANIMATION_DURATION = 2000;
+const ANIMATION_DURATION = 5000;
 
 interface ExchangeDetailsDialogProps {
 	exchangeRateDetails: ExchangeRateDetails | null;

@@ -30,6 +30,8 @@ interface SettingsDialogProps {
 	setShowBadges: (show: boolean) => void;
 	showSelectors: boolean;
 	setShowSelectors: (show: boolean) => void;
+	allowMultiplePins: boolean;
+	setAllowMultiplePins: (show: boolean) => void;
 	theme: Theme;
 	setTheme: (theme: Theme) => void;
 }
@@ -41,6 +43,8 @@ function SettingsDialog({
 	setShowBadges,
 	showSelectors,
 	setShowSelectors,
+	allowMultiplePins,
+	setAllowMultiplePins,
 	theme,
 	setTheme,
 }: SettingsDialogProps) {
@@ -112,6 +116,19 @@ function SettingsDialog({
 						<Switch
 							checked={showSelectors}
 							onCheckedChange={setShowSelectors}
+						/>
+					</div>
+					<div className="flex items-center justify-between gap-4">
+						<div className="flex flex-col space-y-1">
+							<Label>Allow Multiple Pinned Dialogs</Label>
+							<p className="text-xs text-muted-foreground">
+								Allow pinning more than one dialog to the main
+								screen
+							</p>
+						</div>
+						<Switch
+							checked={allowMultiplePins}
+							onCheckedChange={setAllowMultiplePins}
 						/>
 					</div>
 					<div className="flex items-center justify-between gap-4">
