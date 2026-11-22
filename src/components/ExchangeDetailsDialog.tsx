@@ -217,12 +217,13 @@ const ExchangeDetailsDialog = memo(function ExchangeDetailsDialog({
 	loading,
 	cryptoAsset,
 	className,
+	inverted,
 	mode = "modal",
 	pinned = false,
 	onTogglePin,
 }: ExchangeDetailsDialogProps) {
-	const sourceCurrency = "MYR";
-	const targetCurrency = "USDT";
+	const sourceCurrency = inverted ? "USDT" : "MYR";
+	const targetCurrency = inverted ? "MYR" : "USDT";
 	const [open, setOpen] = useState(false);
 
 	const prevSourcePriceRef = useRef<number | null>(null);
@@ -294,23 +295,34 @@ const ExchangeDetailsDialog = memo(function ExchangeDetailsDialog({
 		}
 		if (!exchangeRateDetails) return null;
 
+		const sourceData = inverted
+			? exchangeRateDetails.target
+			: exchangeRateDetails.source;
+		const targetData = inverted
+			? exchangeRateDetails.source
+			: exchangeRateDetails.target;
+
 		return (
 			<div
 				className={`grid gap-4 ${stacked ? "grid-cols-1" : "grid-cols-1 md:grid-cols-2"}`}
 			>
 				<PlatformCard
 					label="Source"
-					data={exchangeRateDetails.source}
+					data={sourceData}
 					currency={sourceCurrency}
 					asset={cryptoAsset}
-					priceAnimation={sourcePriceAnimation}
+					priceAnimation={
+						inverted ? targetPriceAnimation : sourcePriceAnimation
+					}
 				/>
 				<PlatformCard
 					label="Target"
-					data={exchangeRateDetails.target}
+					data={targetData}
 					currency={targetCurrency}
 					asset={cryptoAsset}
-					priceAnimation={targetPriceAnimation}
+					priceAnimation={
+						inverted ? sourcePriceAnimation : targetPriceAnimation
+					}
 				/>
 			</div>
 		);

@@ -386,8 +386,9 @@ export default function Home() {
 			setTargetPlatform,
 			cryptoAsset,
 			setCryptoAsset,
+			inverted,
 		}),
-		[sourcePlatform, targetPlatform, cryptoAsset],
+		[sourcePlatform, targetPlatform, cryptoAsset, inverted],
 	);
 
 	const displayProps = useMemo(
