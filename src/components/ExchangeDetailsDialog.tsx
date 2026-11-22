@@ -49,13 +49,17 @@ function getExchangeUrl(platform: string, cryptoAsset: string): string | null {
 	}
 }
 
+function addCommas(numStr: string): string {
+	const [intPart, decPart] = numStr.split(".");
+	const formattedInt = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+	return decPart !== undefined ? `${formattedInt}.${decPart}` : formattedInt;
+}
+
 function formatRate(val: number | undefined | null): string {
 	if (val === undefined || val === null) return "N/A";
 	const four = val.toFixed(4);
 	const decimals = four.endsWith("00") ? four.slice(0, -2) : four;
-	const [intPart, decPart] = decimals.split(".");
-	const formattedInt = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-	return `${formattedInt}.${decPart}`;
+	return addCommas(decimals);
 }
 
 function formatDateTime(timestamp: number): string {
@@ -151,7 +155,7 @@ function PlatformCard({
 
 			<div className="mt-4 grid grid-cols-2 gap-4">
 				{data.volume !== undefined && data.volume !== 0 && (
-					<MetaField label="Volume" value={String(data.volume)} />
+					<MetaField label="Volume" value={addCommas(String(data.volume))} />
 				)}
 				{hasBidAsk && (
 					<MetaField label="Spread" value={`${spread.toFixed(4)}%`} />
