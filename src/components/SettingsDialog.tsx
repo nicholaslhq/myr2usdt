@@ -78,7 +78,7 @@ function SettingsDialog({
 					</DialogDescription>
 				</DialogHeader>
 				<div className="space-y-4">
-					<div className="flex items-center justify-between">
+					<div className="flex items-center justify-between gap-4">
 						<div className="flex flex-col space-y-1">
 							<Label>Show Chart</Label>
 							<p className="text-xs text-muted-foreground">
@@ -90,7 +90,7 @@ function SettingsDialog({
 							onCheckedChange={setShowChart}
 						/>
 					</div>
-					<div className="flex items-center justify-between">
+					<div className="flex items-center justify-between gap-4">
 						<div className="flex flex-col space-y-1">
 							<Label>External Rates Badges</Label>
 							<p className="text-xs text-muted-foreground">
@@ -102,7 +102,7 @@ function SettingsDialog({
 							onCheckedChange={setShowBadges}
 						/>
 					</div>
-					<div className="flex items-center justify-between">
+					<div className="flex items-center justify-between gap-4">
 						<div className="flex flex-col space-y-1">
 							<Label>Platform Asset Selectors</Label>
 							<p className="text-xs text-muted-foreground">
@@ -114,7 +114,7 @@ function SettingsDialog({
 							onCheckedChange={setShowSelectors}
 						/>
 					</div>
-					<div className="flex items-center justify-between">
+					<div className="flex items-center justify-between gap-4">
 						<div className="flex flex-col space-y-1">
 							<Label>Theme</Label>
 							<p className="text-xs text-muted-foreground">
@@ -173,7 +173,7 @@ function SettingsDialog({
 									className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-muted-foreground bg-muted/50 hover:bg-muted hover:text-foreground transition-colors border border-border/50"
 								>
 									<ExternalLink className="h-3 w-3" />
-									View Profile
+									@nlhq
 								</a>
 								<a
 									href="https://github.com/nicholaslhq/myr2usdt"
@@ -182,7 +182,7 @@ function SettingsDialog({
 									className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-muted-foreground bg-muted/50 hover:bg-muted hover:text-foreground transition-colors border border-border/50"
 								>
 									<Github className="h-3 w-3" />
-									View Source
+									Source
 								</a>
 							</div>
 						</div>
