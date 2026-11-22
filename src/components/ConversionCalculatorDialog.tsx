@@ -18,6 +18,13 @@ import {
 	CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
+import {
 	Calculator,
 	ArrowLeftRight,
 	ChevronDown,
@@ -50,7 +57,6 @@ interface FeeConfig {
 	value: number;
 	payer: FeePayer;
 	description?: string;
-	estimated?: boolean;
 	formula?: string;
 }
 
@@ -63,7 +69,7 @@ const DEFAULT_FEES: FeeConfig[] = [
 		value: 0,
 		payer: "source",
 		description: "Fee to deposit funds",
-		estimated: true,
+
 	},
 	{
 		id: "buying_fee",
@@ -74,7 +80,7 @@ const DEFAULT_FEES: FeeConfig[] = [
 		payer: "source",
 		description: "Platform trading fee when buying",
 		formula: "amount * percentage / 100",
-		estimated: true,
+
 	},
 	{
 		id: "sending_fee",
@@ -84,7 +90,7 @@ const DEFAULT_FEES: FeeConfig[] = [
 		value: 0,
 		payer: "source",
 		description: "Fee to send/transfer crypto",
-		estimated: true,
+
 	},
 	{
 		id: "selling_fee",
@@ -95,7 +101,7 @@ const DEFAULT_FEES: FeeConfig[] = [
 		payer: "target",
 		description: "Platform trading fee when selling",
 		formula: "amount * percentage / 100",
-		estimated: true,
+
 	},
 	{
 		id: "withdrawal_fee",
@@ -105,7 +111,7 @@ const DEFAULT_FEES: FeeConfig[] = [
 		value: 0,
 		payer: "target",
 		description: "Fee to withdraw funds",
-		estimated: true,
+
 	},
 ];
 
@@ -388,7 +394,6 @@ const ConversionCalculatorDialog = memo(function ConversionCalculatorDialog({
 		setFees(DEFAULT_FEES.map((f) => ({ ...f })));
 	};
 
-	const hasEstimatedFees = fees.some((f) => f.enabled && f.estimated);
 	const totalFeesAmount = isInputMyr
 		? feeCalculation.totalFeesMyr
 		: feeCalculation.totalFeesUsdt;
@@ -628,14 +633,9 @@ const ConversionCalculatorDialog = memo(function ConversionCalculatorDialog({
 														}
 														className="scale-75"
 													/>
-													<Label className="text-xs font-medium flex-1">
-														{fee.name}
-														{fee.estimated && (
-															<span className="text-muted-foreground ml-1">
-																*
-															</span>
-														)}
-													</Label>
+												<Label className="text-xs font-medium flex-1">
+													{fee.name}
+												</Label>
 												</div>
 												<span className="text-xs text-muted-foreground">
 													{fee.payer === "source"
@@ -645,29 +645,33 @@ const ConversionCalculatorDialog = memo(function ConversionCalculatorDialog({
 											</div>
 											{fee.enabled && (
 												<div className="grid grid-cols-3 gap-2">
-													<div className="col-span-1">
-														<select
-															value={fee.type}
-															onChange={(e) =>
-																updateFee(
-																	fee.id,
-																	{
-																		type: e
-																			.target
-																			.value as FeeType,
-																	},
-																)
-															}
-															className="flex h-7 w-full rounded-md border border-input bg-background px-1 py-0.5 text-xs"
-														>
-															<option value="fixed">
+												<div className="col-span-1">
+													<Select
+														value={fee.type}
+														onValueChange={(
+															value,
+														) =>
+															updateFee(
+																fee.id,
+																{
+																	type: value as FeeType,
+																},
+															)
+														}
+													>
+													<SelectTrigger className="h-7 w-full min-w-20 text-xs data-[size=default]:h-7">
+														<SelectValue />
+													</SelectTrigger>
+														<SelectContent>
+															<SelectItem value="fixed">
 																Fixed
-															</option>
-															<option value="percentage">
+															</SelectItem>
+															<SelectItem value="percentage">
 																%
-															</option>
-														</select>
-													</div>
+															</SelectItem>
+														</SelectContent>
+													</Select>
+												</div>
 													<div className="col-span-2">
 														<Input
 															type="number"
@@ -701,13 +705,8 @@ const ConversionCalculatorDialog = memo(function ConversionCalculatorDialog({
 											)}
 										</div>
 									);
-								})}
-								{hasEstimatedFees && (
-									<div className="text-xs text-muted-foreground p-2 rounded bg-muted/50">
-										Some fees are estimated/default values
-									</div>
-								)}
-							</CollapsibleContent>
+							})}
+						</CollapsibleContent>
 						</Collapsible>
 
 						<div className="p-4 border rounded-lg space-y-3 bg-muted/20">
