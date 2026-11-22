@@ -163,9 +163,9 @@
 }
 
 .green-pulse {
-	animation: green-pulse 2s ease-in-out;
+	animation: green-pulse 3s ease-in-out;
 }
 
 .red-pulse {
-	animation: red-pulse 2s ease-in-out;
+	animation: red-pulse 3s ease-in-out;
 }

@@ -37,7 +37,7 @@ import { RefreshCw } from "lucide-react";
 import SettingsDialog from "@/components/SettingsDialog";
 
 const AUTO_REFRESH_INTERVAL = 60_000;
-const ANIMATION_DURATION = 2000;
+const ANIMATION_DURATION = 3000;
 
 export default function Home() {
 	const [sourcePlatform, setSourcePlatform] = useState("luno");
@@ -472,7 +472,10 @@ export default function Home() {
 				</Card>
 				{Array.from(pinnedDialogs).map((which) =>
 					which === "calculator" ? (
-						<div key={which} className="w-full min-w-[320px] max-w-md md:w-96">
+						<div
+							key={which}
+							className="w-full min-w-[320px] max-w-md md:w-96"
+						>
 							<ConversionCalculatorDialog
 								{...conversionCalculatorProps}
 								mode="docked"
@@ -480,7 +483,10 @@ export default function Home() {
 							/>
 						</div>
 					) : (
-						<div key={which} className="w-full min-w-[320px] max-w-md md:w-96">
+						<div
+							key={which}
+							className="w-full min-w-[320px] max-w-md md:w-96"
+						>
 							<ExchangeDetailsDialog
 								{...detailsDialogProps}
 								mode="docked"
