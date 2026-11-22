@@ -224,6 +224,9 @@ function SettingsDialog({
 										animation:
 											"heartbeat 1.5s ease-in-out infinite",
 										transformOrigin: "center",
+										position: "relative",
+										top: "-2px",
+										marginInline: "2px",
 									}}
 								/>
 								{" by Nicholas"}
