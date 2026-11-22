@@ -15,12 +15,13 @@ import {
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
-import { Info, Pin } from "lucide-react";
+import { ExternalLink, Info, Pin } from "lucide-react";
 import { ExchangeRateDetails } from "@/lib/api";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
+import { cn } from "@/lib/utils";
 import React, { memo, useState, useRef, useEffect } from "react";
 
 const EXCHANGE_URLS: Record<string, string> = {
@@ -48,6 +49,19 @@ function getExchangeUrl(platform: string, cryptoAsset: string): string | null {
 	}
 }
 
+function formatRate(val: number | undefined | null): string {
+	return val !== undefined && val !== null ? val.toFixed(4) : "N/A";
+}
+
+function formatDateTime(timestamp: number): string {
+	return new Date(timestamp).toLocaleString(undefined, {
+		dateStyle: "medium",
+		timeStyle: "medium",
+	});
+}
+
+const ANIMATION_DURATION = 2000;
+
 interface ExchangeDetailsDialogProps {
 	exchangeRateDetails: ExchangeRateDetails | null;
 	loading: boolean;
@@ -59,51 +73,37 @@ interface ExchangeDetailsDialogProps {
 	onTogglePin?: () => void;
 }
 
-function formatRate(val: number | undefined | null): string {
-	return val !== undefined && val !== null ? val.toFixed(4) : "N/A";
-}
-
-function PriceField({
-	name,
-	value,
-	unit,
-	animation = "",
-}: {
-	name: string;
-	value: number | undefined | null;
-	unit: string;
-	animation?: "green-pulse" | "red-pulse" | "";
-}) {
-	return (
-		<div className="col-span-1">
-			<p className="text-sm font-medium">{name}:</p>
-			<p className={`text-sm ${animation}`}>
-				{formatRate(value)} {unit}
-			</p>
-		</div>
-	);
-}
-
-function PlatformSection({
-	label,
-	data,
-	currency,
-	asset,
-	priceAnimation = "",
-}: {
+interface PlatformCardProps {
 	label: string;
 	data: ExchangeRateDetails["source"] | ExchangeRateDetails["target"];
 	currency: string;
 	asset: string;
 	priceAnimation?: "green-pulse" | "red-pulse" | "";
-}) {
+}
+
+function PlatformCard({
+	label,
+	data,
+	currency,
+	asset,
+	priceAnimation = "",
+}: PlatformCardProps) {
 	const url = getExchangeUrl(data.platform, asset);
 	const isClickable = !!url;
+	const bid = data.bid ?? null;
+	const ask = data.ask ?? null;
+	const hasBidAsk = bid !== null && ask !== null;
+	const spread = hasBidAsk ? ((ask! - bid!) / bid!) * 100 : 0;
 
 	return (
-		<>
-			<div className="col-span-2 text-lg font-semibold flex items-center gap-2">
-				{label}
+		<section className="border rounded-lg p-4 bg-muted/50">
+			<div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+				<div className="flex items-center gap-2">
+					<h3 className="text-base font-semibold">{label}</h3>
+					<Badge variant="outline" className="text-xs">
+						{asset.toUpperCase()}
+					</Badge>
+				</div>
 				<TooltipProvider>
 					<Tooltip>
 						<TooltipTrigger asChild>
@@ -111,51 +111,106 @@ function PlatformSection({
 								href={url || "#"}
 								target="_blank"
 								rel="noopener noreferrer"
-								className={`flex items-center ${
+								className={`flex items-center gap-1.5 ${
 									isClickable
 										? "cursor-pointer"
-										: "cursor-default"
+										: "cursor-default opacity-60"
 								}`}
 							>
-								<Badge variant="secondary">
+								<Badge
+									variant="secondary"
+									className="flex items-center gap-1.5"
+								>
 									{data.platform}
+									{isClickable && (
+										<ExternalLink className="h-3 w-3" />
+									)}
 								</Badge>
 							</Link>
 						</TooltipTrigger>
 						<TooltipContent>
-							<p>
-								Visit {data.platform} official website in new
-								tab
-							</p>
+							<p>Visit {data.platform} official website</p>
 						</TooltipContent>
 					</Tooltip>
 				</TooltipProvider>
-				<Badge variant="outline">{asset.toUpperCase()}</Badge>
 			</div>
-			<PriceField name="Price" value={data.price} unit={currency} animation={priceAnimation} />
-			{data.volume && (
-				<div className="col-span-1">
-					<p className="text-sm font-medium">Volume:</p>
-					<p className="text-sm">{data.volume}</p>
-				</div>
-			)}
-			{data.bid !== undefined && (
-				<PriceField name="Bid" value={data.bid} unit={currency} />
-			)}
-			{data.ask !== undefined && (
-				<PriceField name="Ask" value={data.ask} unit={currency} />
-			)}
-			<div className="col-span-2">
-				<p className="text-sm font-medium">Datetime:</p>
-				<p className="text-sm">
-					{new Date(data.timestamp).toLocaleString()}
-				</p>
+
+			<div
+				className={`text-2xl font-semibold tracking-tight ${priceAnimation}`}
+			>
+				{formatRate(data.price)}
+				<span className="ml-1 text-sm text-muted-foreground">
+					{currency}
+				</span>
 			</div>
-		</>
+
+			<div className="mt-4 grid grid-cols-2 gap-4">
+				{data.volume !== undefined && data.volume !== 0 && (
+					<MetaField label="Volume" value={String(data.volume)} />
+				)}
+				{hasBidAsk && (
+					<MetaField label="Spread" value={`${spread.toFixed(4)}%`} />
+				)}
+				{hasBidAsk && (
+					<MetaField
+						label="Bid"
+						value={formatRate(bid!)}
+						unit={currency}
+					/>
+				)}
+				{hasBidAsk && (
+					<MetaField
+						label="Ask"
+						value={formatRate(ask!)}
+						unit={currency}
+					/>
+				)}
+				<MetaField
+					label="Last Updated"
+					value={formatDateTime(data.timestamp)}
+					className="col-span-2"
+				/>
+			</div>
+		</section>
 	);
 }
 
-const ANIMATION_DURATION = 2000;
+function MetaField({
+	label,
+	value,
+	unit,
+	className,
+}: {
+	label: string;
+	value: string;
+	unit?: string;
+	className?: string;
+}) {
+	return (
+		<div className={cn("flex flex-col", className)}>
+			<span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+				{label}
+			</span>
+			<span className="text-sm font-medium">
+				{value}
+				{unit ? ` ${unit}` : ""}
+			</span>
+		</div>
+	);
+}
+
+function CardSkeleton() {
+	return (
+		<div className="space-y-3">
+			<Skeleton className="h-10 w-1/3" />
+			<Skeleton className="h-8 w-1/2" />
+			<Skeleton className="h-6 w-1/4" />
+			<Skeleton className="h-6 w-1/4" />
+			<Skeleton className="h-6 w-1/4" />
+			<Skeleton className="h-6 w-1/3" />
+		</div>
+	);
+}
 
 const ExchangeDetailsDialog = memo(function ExchangeDetailsDialog({
 	exchangeRateDetails,
@@ -170,7 +225,6 @@ const ExchangeDetailsDialog = memo(function ExchangeDetailsDialog({
 	const targetCurrency = "USDT";
 	const [open, setOpen] = useState(false);
 
-	// Track previous prices for animation
 	const prevSourcePriceRef = useRef<number | null>(null);
 	const prevTargetPriceRef = useRef<number | null>(null);
 	const [sourcePriceAnimation, setSourcePriceAnimation] = useState<
@@ -180,14 +234,15 @@ const ExchangeDetailsDialog = memo(function ExchangeDetailsDialog({
 		"green-pulse" | "red-pulse" | ""
 	>("");
 
-	// Detect price changes and trigger animations
 	useEffect(() => {
 		if (loading || !exchangeRateDetails) return;
 
 		if (prevSourcePriceRef.current !== null) {
 			if (exchangeRateDetails.source.price < prevSourcePriceRef.current) {
 				setSourcePriceAnimation("green-pulse");
-			} else if (exchangeRateDetails.source.price > prevSourcePriceRef.current) {
+			} else if (
+				exchangeRateDetails.source.price > prevSourcePriceRef.current
+			) {
 				setSourcePriceAnimation("red-pulse");
 			} else {
 				setSourcePriceAnimation("");
@@ -198,7 +253,9 @@ const ExchangeDetailsDialog = memo(function ExchangeDetailsDialog({
 		if (prevTargetPriceRef.current !== null) {
 			if (exchangeRateDetails.target.price < prevTargetPriceRef.current) {
 				setTargetPriceAnimation("green-pulse");
-			} else if (exchangeRateDetails.target.price > prevTargetPriceRef.current) {
+			} else if (
+				exchangeRateDetails.target.price > prevTargetPriceRef.current
+			) {
 				setTargetPriceAnimation("red-pulse");
 			} else {
 				setTargetPriceAnimation("");
@@ -207,66 +264,57 @@ const ExchangeDetailsDialog = memo(function ExchangeDetailsDialog({
 		prevTargetPriceRef.current = exchangeRateDetails.target.price;
 	}, [loading, exchangeRateDetails]);
 
-	// Clear animations after duration
 	useEffect(() => {
 		if (!sourcePriceAnimation) return;
-		const timer = setTimeout(() => setSourcePriceAnimation(""), ANIMATION_DURATION);
+		const timer = setTimeout(
+			() => setSourcePriceAnimation(""),
+			ANIMATION_DURATION,
+		);
 		return () => clearTimeout(timer);
 	}, [sourcePriceAnimation]);
 
 	useEffect(() => {
 		if (!targetPriceAnimation) return;
-		const timer = setTimeout(() => setTargetPriceAnimation(""), ANIMATION_DURATION);
+		const timer = setTimeout(
+			() => setTargetPriceAnimation(""),
+			ANIMATION_DURATION,
+		);
 		return () => clearTimeout(timer);
 	}, [targetPriceAnimation]);
 
-	const conditionalBody =
-		loading && !exchangeRateDetails ? (
-			<div className="grid gap-4 py-4">
-				<Skeleton className="h-12 w-3/4" />
-				<Skeleton className="h-8 w-full" />
-				<Skeleton className="h-8 w-full" />
-				<Skeleton className="h-8 w-full" />
-				<Separator />
-				<Skeleton className="h-12 w-3/4" />
-				<Skeleton className="h-8 w-full" />
-				<Skeleton className="h-8 w-full" />
-				<Skeleton className="h-8 w-full" />
-			</div>
-		) : exchangeRateDetails ? (
-			<div className="grid gap-4 py-4">
-				<div className="grid grid-cols-2 gap-4">
-					<PlatformSection
-						label="Source"
-						data={exchangeRateDetails.source}
-						currency={sourceCurrency}
-						asset={cryptoAsset}
-						priceAnimation={sourcePriceAnimation}
-					/>
+	const renderBody = (stacked = false) => {
+		if (loading && !exchangeRateDetails) {
+			return (
+				<div className="grid gap-4 py-4">
+					<CardSkeleton />
+					<Separator />
+					<CardSkeleton />
 				</div>
+			);
+		}
+		if (!exchangeRateDetails) return null;
 
-				<Separator />
-
-				<div className="grid grid-cols-2 gap-4">
-					<PlatformSection
-						label="Target"
-						data={exchangeRateDetails.target}
-						currency={targetCurrency}
-						asset={cryptoAsset}
-						priceAnimation={targetPriceAnimation}
-					/>
-				</div>
+		return (
+			<div
+				className={`grid gap-4 ${stacked ? "grid-cols-1" : "grid-cols-1 md:grid-cols-2"}`}
+			>
+				<PlatformCard
+					label="Source"
+					data={exchangeRateDetails.source}
+					currency={sourceCurrency}
+					asset={cryptoAsset}
+					priceAnimation={sourcePriceAnimation}
+				/>
+				<PlatformCard
+					label="Target"
+					data={exchangeRateDetails.target}
+					currency={targetCurrency}
+					asset={cryptoAsset}
+					priceAnimation={targetPriceAnimation}
+				/>
 			</div>
-		) : null;
-
-	const header = (
-		<DialogHeader>
-			<DialogTitle>Exchange Details</DialogTitle>
-			<DialogDescription>
-				Detailed information about the exchange rate.
-			</DialogDescription>
-		</DialogHeader>
-	);
+		);
+	};
 
 	if (mode === "docked") {
 		return (
@@ -293,9 +341,7 @@ const ExchangeDetailsDialog = memo(function ExchangeDetailsDialog({
 						</Button>
 					</div>
 				</div>
-				<div className="overflow-y-auto p-4 pt-0">
-					{conditionalBody}
-				</div>
+				<div className="overflow-y-auto p-4">{renderBody(true)}</div>
 			</div>
 		);
 	}
@@ -312,7 +358,7 @@ const ExchangeDetailsDialog = memo(function ExchangeDetailsDialog({
 					<Info className="h-4 w-4" />
 				</Button>
 			</DialogTrigger>
-			<DialogContent className="sm:max-w-[425px]">
+			<DialogContent className="sm:max-w-[560px] max-h-[90vh] overflow-y-auto">
 				{onTogglePin && (
 					<Button
 						type="button"
@@ -322,7 +368,11 @@ const ExchangeDetailsDialog = memo(function ExchangeDetailsDialog({
 							setOpen(false);
 							onTogglePin();
 						}}
-						aria-label={pinned ? "Unpin exchange details" : "Pin exchange details to side"}
+						aria-label={
+							pinned
+								? "Unpin exchange details"
+								: "Pin exchange details to side"
+						}
 						className={`absolute top-4 right-12 z-10 h-8 w-8 cursor-pointer rounded-full hover:bg-muted hover:text-foreground hover:opacity-100 ${
 							pinned ? "text-primary opacity-100" : "opacity-70"
 						}`}
@@ -332,11 +382,18 @@ const ExchangeDetailsDialog = memo(function ExchangeDetailsDialog({
 						/>
 					</Button>
 				)}
-				{header}
-				{conditionalBody}
+				<DialogHeader>
+					<DialogTitle>Exchange Details</DialogTitle>
+					<DialogDescription>
+						Detailed information about the exchange rate.
+					</DialogDescription>
+				</DialogHeader>
+				<div className="space-y-4">{renderBody()}</div>
 				<DialogFooter>
 					<DialogClose asChild>
-						<Button type="button" className="cursor-pointer">Close</Button>
+						<Button type="button" className="cursor-pointer">
+							Close
+						</Button>
 					</DialogClose>
 				</DialogFooter>
 			</DialogContent>
