@@ -50,7 +50,12 @@ function getExchangeUrl(platform: string, cryptoAsset: string): string | null {
 }
 
 function formatRate(val: number | undefined | null): string {
-	return val !== undefined && val !== null ? val.toFixed(4) : "N/A";
+	if (val === undefined || val === null) return "N/A";
+	const four = val.toFixed(4);
+	const decimals = four.endsWith("00") ? four.slice(0, -2) : four;
+	const [intPart, decPart] = decimals.split(".");
+	const formattedInt = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+	return `${formattedInt}.${decPart}`;
 }
 
 function formatDateTime(timestamp: number): string {
