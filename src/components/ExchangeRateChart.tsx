@@ -25,7 +25,7 @@ ChartJS.register(
 	LineElement,
 	Title,
 	Tooltip,
-	Legend
+	Legend,
 );
 
 const CHART_POINTS_THRESHOLD = 20;
@@ -41,19 +41,31 @@ interface ExchangeRateChartProps {
 
 function buildChartData(
 	historicalRates: HistoricalRate[],
-	inverted: boolean
+	inverted: boolean,
+	pointThreshold: number = CHART_POINTS_THRESHOLD,
 ): ChartData<"line"> {
-	const hidePoints = historicalRates.length > CHART_POINTS_THRESHOLD;
+	const hidePoints = historicalRates.length > pointThreshold;
+	const spanMs =
+		historicalRates.length > 1
+			? new Date(
+					historicalRates[historicalRates.length - 1].timestamp,
+				).getTime() - new Date(historicalRates[0].timestamp).getTime()
+			: 0;
+	const showSeconds = spanMs < 10 * 60 * 1000; // under 10 minutes
 
 	return {
 		labels: historicalRates.map((rate) =>
-			new Date(rate.timestamp).toLocaleTimeString()
+			new Date(rate.timestamp).toLocaleTimeString([], {
+				hour: "2-digit",
+				minute: "2-digit",
+				second: showSeconds ? "2-digit" : undefined,
+			}),
 		),
 		datasets: [
 			{
 				label: "Exchange Rate",
 				data: historicalRates.map((rate) =>
-					inverted ? 1 / rate.rate : rate.rate
+					inverted ? 1 / rate.rate : rate.rate,
 				),
 				fill: false,
 				borderColor: LINE_COLOR,
@@ -70,11 +82,10 @@ function buildChartData(
 // Tooltip callback factory - captures historicalRates at creation time
 function buildTooltipCallback(
 	historicalRates: HistoricalRate[],
-	inverted: boolean
+	inverted: boolean,
 ): (context: TooltipItem<"line">) => string | string[] {
 	return function (context: TooltipItem<"line">) {
-		const historicalRate =
-			historicalRates[context.dataIndex];
+		const historicalRate = historicalRates[context.dataIndex];
 		if (
 			!historicalRate ||
 			historicalRate.rate === undefined ||
@@ -82,7 +93,9 @@ function buildTooltipCallback(
 		) {
 			return "N/A";
 		}
-		const displayRate = inverted ? 1 / historicalRate.rate : historicalRate.rate;
+		const displayRate = inverted
+			? 1 / historicalRate.rate
+			: historicalRate.rate;
 		const labels: string[] = [];
 		labels.push(`Rate: ${displayRate.toFixed(4)}`);
 		if (historicalRate.sourcePlatform) {
@@ -103,16 +116,14 @@ export default React.memo(function ExchangeRateChart({
 	pointThreshold = CHART_POINTS_THRESHOLD,
 	inverted,
 }: ExchangeRateChartProps) {
-	const hidePoints = historicalRates.length > pointThreshold;
-
 	const data = useMemo(
-		() => buildChartData(historicalRates, inverted),
-		[historicalRates, inverted]
+		() => buildChartData(historicalRates, inverted, pointThreshold),
+		[historicalRates, inverted, pointThreshold],
 	);
 
 	const tooltipCallback = useMemo(
 		() => buildTooltipCallback(historicalRates, inverted),
-		[historicalRates, inverted]
+		[historicalRates, inverted],
 	);
 
 	const options: ChartOptions<"line"> = useMemo(
@@ -120,13 +131,19 @@ export default React.memo(function ExchangeRateChart({
 			responsive: true,
 			maintainAspectRatio: false,
 			backgroundColor: CHART_BG_COLOR,
+			interaction: {
+				mode: "index" as const,
+				intersect: false,
+			},
 			plugins: {
 				legend: {
 					display: false,
 					position: "top" as const,
 				},
 				tooltip: {
-					enabled: !hidePoints,
+					enabled: true,
+					mode: "index" as const,
+					intersect: false,
 					callbacks: {
 						label: tooltipCallback,
 					},
@@ -145,7 +162,7 @@ export default React.memo(function ExchangeRateChart({
 				x: {
 					title: { display: false },
 					grid: { display: false },
-					ticks: { display: false },
+					ticks: { display: true, maxTicksLimit: 5 },
 					border: { display: false },
 				},
 				y: {
@@ -162,7 +179,7 @@ export default React.memo(function ExchangeRateChart({
 				padding: { left: 0, right: 0, top: 0, bottom: 0 },
 			},
 		}),
-		[hidePoints, tooltipCallback]
+		[tooltipCallback],
 	);
 
 	return (
