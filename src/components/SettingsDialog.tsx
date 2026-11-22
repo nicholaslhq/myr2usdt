@@ -18,7 +18,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
-import { Settings, Heart, Sparkles, Github, ExternalLink } from "lucide-react";
+import { Settings, Heart, Github, ExternalLink } from "lucide-react";
 import React, { useEffect, useState } from "react";
 
 type Theme = "light" | "dark";
@@ -34,6 +34,8 @@ interface SettingsDialogProps {
 	setAllowMultiplePins: (show: boolean) => void;
 	theme: Theme;
 	setTheme: (theme: Theme) => void;
+	refreshInterval: number;
+	setRefreshInterval: (interval: number) => void;
 }
 
 function SettingsDialog({
@@ -47,6 +49,8 @@ function SettingsDialog({
 	setAllowMultiplePins,
 	theme,
 	setTheme,
+	refreshInterval,
+	setRefreshInterval,
 }: SettingsDialogProps) {
 	const [open, setOpen] = useState(false);
 
@@ -61,6 +65,15 @@ function SettingsDialog({
 	const THEME_OPTIONS: { value: Theme; label: string }[] = [
 		{ value: "dark", label: "Dark" },
 		{ value: "light", label: "Light" },
+	];
+
+	const REFRESH_INTERVAL_OPTIONS: { value: number; label: string }[] = [
+		{ value: 30_000, label: "30 seconds" },
+		{ value: 60_000, label: "1 minute" },
+		{ value: 2 * 60_000, label: "2 minutes" },
+		{ value: 5 * 60_000, label: "5 minutes" },
+		{ value: 10 * 60_000, label: "10 minutes" },
+		{ value: 30 * 60_000, label: "30 minutes" },
 	];
 
 	return (
@@ -130,6 +143,34 @@ function SettingsDialog({
 							checked={allowMultiplePins}
 							onCheckedChange={setAllowMultiplePins}
 						/>
+					</div>
+					<div className="flex items-center justify-between gap-4">
+						<div className="flex flex-col space-y-1">
+							<Label>Refresh Interval</Label>
+							<p className="text-xs text-muted-foreground">
+								How often to fetch the latest exchange rates
+							</p>
+						</div>
+						<Select
+							value={String(refreshInterval)}
+							onValueChange={(value) =>
+								setRefreshInterval(Number(value))
+							}
+						>
+							<SelectTrigger>
+								<SelectValue />
+							</SelectTrigger>
+							<SelectContent>
+								{REFRESH_INTERVAL_OPTIONS.map((option) => (
+									<SelectItem
+										key={option.value}
+										value={String(option.value)}
+									>
+										{option.label}
+									</SelectItem>
+								))}
+							</SelectContent>
+						</Select>
 					</div>
 					<div className="flex items-center justify-between gap-4">
 						<div className="flex flex-col space-y-1">

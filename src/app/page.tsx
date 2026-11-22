@@ -36,7 +36,6 @@ const ExchangeRateChart = dynamic(
 import { RefreshCw } from "lucide-react";
 import SettingsDialog from "@/components/SettingsDialog";
 
-const AUTO_REFRESH_INTERVAL = 60_000;
 const ANIMATION_DURATION = 3000;
 
 export default function Home() {
@@ -68,6 +67,7 @@ export default function Home() {
 	const [showSelectors, setShowSelectors] = useState(true);
 	const [theme, setTheme] = useState<"light" | "dark">("dark");
 	const [allowMultiplePins, setAllowMultiplePins] = useState(false);
+	const [refreshInterval, setRefreshInterval] = useState(60_000);
 	const [pinnedDialogs, setPinnedDialogs] = useState<
 		Set<"calculator" | "details">
 	>(new Set());
@@ -235,12 +235,12 @@ export default function Home() {
 
 	useEffect(() => {
 		calculateExchangeRate();
-		const refreshInterval = setInterval(
+		const refreshIntervalId = setInterval(
 			calculateExchangeRate,
-			AUTO_REFRESH_INTERVAL,
+			refreshInterval,
 		);
-		return () => clearInterval(refreshInterval);
-	}, [calculateExchangeRate]);
+		return () => clearInterval(refreshIntervalId);
+	}, [calculateExchangeRate, refreshInterval]);
 
 	// Progress timer - uses ref only, no timestamp state
 	const [progress, setProgress] = useState(0);
@@ -248,7 +248,7 @@ export default function Home() {
 	useEffect(() => {
 		const interval = setInterval(() => {
 			const elapsed = Date.now() - refreshStartRef.current;
-			const p = Math.min(elapsed / AUTO_REFRESH_INTERVAL, 1);
+			const p = Math.min(elapsed / refreshInterval, 1);
 			setProgress(p);
 			if (p >= 1) {
 				refreshStartRef.current = Date.now();
@@ -256,7 +256,7 @@ export default function Home() {
 		}, 50);
 
 		return () => clearInterval(interval);
-	}, []);
+	}, [refreshInterval]);
 
 	// Animate rate changes
 	useEffect(() => {
@@ -441,6 +441,8 @@ export default function Home() {
 								setTheme={setTheme}
 								allowMultiplePins={allowMultiplePins}
 								setAllowMultiplePins={setAllowMultiplePins}
+								refreshInterval={refreshInterval}
+								setRefreshInterval={setRefreshInterval}
 							/>
 						</div>
 						<Button
