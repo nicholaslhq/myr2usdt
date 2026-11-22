@@ -18,7 +18,13 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
-import { Settings, Heart, Github, ExternalLink } from "lucide-react";
+import {
+	Settings,
+	Heart,
+	Github,
+	ExternalLink,
+	MessageCircle,
+} from "lucide-react";
 import React, { useEffect, useState } from "react";
 
 type Theme = "light" | "dark";
@@ -231,7 +237,7 @@ function SettingsDialog({
 									className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-muted-foreground bg-muted/50 hover:bg-muted hover:text-foreground transition-colors border border-border/50"
 								>
 									<ExternalLink className="h-3 w-3" />
-									@nlhq
+									nlhq
 								</a>
 								<a
 									href="https://github.com/nicholaslhq/myr2usdt"
@@ -241,6 +247,15 @@ function SettingsDialog({
 								>
 									<Github className="h-3 w-3" />
 									Source
+								</a>
+								<a
+									href="https://github.com/nicholaslhq/myr2usdt/issues"
+									target="_blank"
+									rel="noopener noreferrer"
+									className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-muted-foreground bg-muted/50 hover:bg-muted hover:text-foreground transition-colors border border-border/50"
+								>
+									<MessageCircle className="h-3 w-3" />
+									Feedback
 								</a>
 							</div>
 						</div>
