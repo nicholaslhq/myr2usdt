@@ -51,16 +51,30 @@ function buildChartData(
 					historicalRates[historicalRates.length - 1].timestamp,
 				).getTime() - new Date(historicalRates[0].timestamp).getTime()
 			: 0;
-	const showSeconds = spanMs < 10 * 60 * 1000; // under 10 minutes
+	const showSeconds = spanMs < 5 * 60 * 1000; // under 5 minutes
+	const showDate = spanMs >= 24 * 60 * 60 * 1000; // one day or more
 
 	return {
-		labels: historicalRates.map((rate) =>
-			new Date(rate.timestamp).toLocaleTimeString([], {
+		labels: historicalRates.map((rate) => {
+			const date = new Date(rate.timestamp);
+			if (showDate) {
+				return [
+					date.toLocaleString([], {
+						month: "short",
+						day: "numeric",
+					}),
+					date.toLocaleTimeString([], {
+						hour: "2-digit",
+						minute: "2-digit",
+					}),
+				];
+			}
+			return date.toLocaleTimeString([], {
 				hour: "2-digit",
 				minute: "2-digit",
 				second: showSeconds ? "2-digit" : undefined,
-			}),
-		),
+			});
+		}),
 		datasets: [
 			{
 				label: "Exchange Rate",
@@ -162,7 +176,13 @@ export default React.memo(function ExchangeRateChart({
 				x: {
 					title: { display: false },
 					grid: { display: false },
-					ticks: { display: true, maxTicksLimit: 5 },
+					ticks: {
+						display: true,
+						maxTicksLimit: 5,
+						maxRotation: 0,
+						minRotation: 0,
+						autoSkip: true,
+					},
 					border: { display: false },
 				},
 				y: {
